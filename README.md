@@ -1,1 +1,1 @@
-# dyngem
+# dynamicgem: Python Library for Dynamic Graph Embedding Methods
