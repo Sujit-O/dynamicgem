@@ -1,0 +1,27 @@
+# Compiled python modules.
+*.pyc
+
+# Setuptools distribution folder.
+/dist/
+/build/
+/py-env/
+/venv/
+/tmp/
+/intermediate/
+/dataset/
+
+dynamicgem/intermediate
+dynamicgem/dataset
+
+# Python egg metadata, regenerated from source files by setuptools.
+/*.egg-info
+/*.egg
+*.pdf
+*.txt
+*.csv
+.vscode/settings.json
+dynamicgem/test/.coverage*
+.coverage
+dataset/*
+/docs/build/*
+/docs/source/auto_examples/*
