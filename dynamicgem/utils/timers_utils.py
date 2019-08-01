@@ -2,7 +2,7 @@ import os
 import numpy as np
 from scipy.sparse import csc_matrix, find
 from scipy.sparse.linalg import svds
-from numpy import linalg as LA
+from numpy import linalg as LA, pinv
 
 
 output = '../output'
@@ -68,10 +68,10 @@ def Obj(Sim, U, V):
     """
 
     # PS_u PS_v are the K x K matrix, pre-calculated sum for embedding vector
-	# PS_u(i,j) = sum_k=1^N U(k,i)U(k,j)
-	# PS_v(i,j) = sum_k=1^N V(k,i)V(k,j)
+    # PS_u(i,j) = sum_k=1^N U(k,i)U(k,j)
+    # PS_v(i,j) = sum_k=1^N V(k,i)V(k,j)
 
-	return LA.norm(Sim.toarray()- np.matmul(U,np.transpose(V)))
+    return LA.norm(Sim.toarray()- np.matmul(U,np.transpose(V)))
     # PS_u = np.matmul(np.transpose(U) , U)
     # PS_v = np.matmul(np.transpose(V) , V)
 
@@ -95,7 +95,7 @@ def Obj(Sim, U, V):
 
     # return L
 
-def deltaA(A, filepath,M):
+def deltaA(A, filepath, M):
 	"""Function to  get the difference between previous and current graph.
            
         Args:
@@ -139,6 +139,8 @@ def TRIP(Old_U,Old_S,Old_V, Delta_A):
         	 Matrices: New_U, New_S, New_V
     """
     N, K = np.shape(Old_U)
+
+    # solve eigenvalue and eigenvectors from SVD, denote as L, X
     Old_X = Old_U
     for i in range(K):
     	temp_i = np.argmax(np.absolute(Old_X[:,i]))
@@ -146,9 +148,66 @@ def TRIP(Old_U,Old_S,Old_V, Delta_A):
     		Old_X[:,i]= - Old_X[:,i]
     temp_v = Old_U.max()
     temp_i = np.argmax(Old_U)
+    ind = [np.ravel_multi_index((temp_i, p), dims=(N,K), order='F') for p in range(K)]
+    temp_sign = np.sign(tempv*[Old_V.ravel()[j] for j in ind])
+    Old_L = np.multiply(np.diag(Old_S),temp_sign)
 
-    
+    # calculate the sum term
+    temp_sum = np.transpose(Old_X)@ DeltaA.toarray()@ Old_X
+    #calculate eignevalues of changes
+    Delta_L = np.transpose(np.diag(temp_sum))
 
+    #calculate eigenvectors of change
+    Delta_X = np.zeros([N,K])
+    for i in range(K):
+    	temp_D = np.diag(np.ones([1,k])*(Old_L[i]-Delta_L[i])-Old_L)
+    	temp_alpha = pinv(temp_D - temp_sum) @ temp_sum[:,i]
+    	Delta_X[:,i]= Old_X @ temp_alpha
+
+    #return updated result
+    New_U = Old_X + Delta_X
+    for i in range(K):
+    	New_U[:,i]= New_U[:,i] / np.sqrt(np.transpose(New_U[:,i])@ New_U[:,i])
+    New_S = np.diag(np.absolute(Old_L+Delta_L))
+    New_V = New_U@np.diag(np.sign(Old_L+ Delta_L))
+
+    return New_U, New_S, New_V
+
+def Obj_SimChange(S_ori, S_add, U, V):
+	"""Function to  calculate the objective funciton or loss.
+           
+        Args:
+            S_ori (Sparse Matrix): Sparse scipy of original adjancey matrix
+            S_add (Sparse Matrix): Sparse scipy of added adjancey matrix
+            U (Matrix): N x K left embedding vector
+            V (Matrix): N x K right embedding vector
+            loss_ori (float): Origina loss value
+	
+        Returns:
+        	Float: New calculcated loss value
+    """
+    return LA.norm(S_ori.toarray()+S_add.toarray()- np.matmul(U,np.transpose(V)))
+
+def getAddedEdge(A, filepath, M):
+	"""Function to  get the difference between previous and current graph.
+           
+        Args:
+            A (Sparse Matrix): Sparse scipy adjancey matrix
+            M (dict): Dictionary of aribitrary nodes to consecutive node values
+            filepath (str): Txt path where the graph is stored.
+	
+        Returns:
+        	Sparse Matrix: The added graph
+    """
+    A_new = parseData(filepath, M)
+    L = A.shape[0]
+    S_add = csc_matrix(([0], ([0], [0])), shape=(L,L)) 
+    [i_new, j_new, val_new] = find(A_new)
+    for k in range(len(i_new)):
+    	if A.toarray()[i_new[k],j_new[k]] != val_new[k]:
+    		S_add[i_new[k],j_new[k]] = val_new[k]
+
+    return S_add
 
 
 def TIMERS(dataFolder, K, Theta, datatype):
@@ -190,8 +249,8 @@ def TIMERS(dataFolder, K, Theta, datatype):
   	# calculate static solution
   	U[0], S[0], V[0] = svds(A, K)
 
-  	U_cur = U[0] * np.sqrt(S[0])
-  	V_cur - S[0] * np.sqrt(S[0])
+  	U_cur = U[0] @ np.sqrt(S[0])
+  	V_cur - S[0] @ np.sqrt(S[0])
 
   	if not os.path.exists(output):
   		os.mkdir(output)
@@ -225,8 +284,87 @@ def TIMERS(dataFolder, K, Theta, datatype):
 			U[i], S[i], V[i] = TRIP(U[i-1],S[i-1],V[i-1],S_add)
 			# Note: TRIP does not insure smaller value
 
+			U_cur = U[i] @ np.sqrt(S[i])
+          	V_cur = V[i] @ np.sqrt(S[i])
+
+         	# save the current embeddings		
+		  	with open(output+'/'+datatype +'/incrementalSVD/'+str(i)+'_U.txt','wb') as fh:
+			    for line in U_cur:
+			        np.savetxt(fh, line, fmt='%.4f')
+
+			with open(output+'/'+datatype +'/incrementalSVD/'+str(i)+'_V.txt','wb') as fh:
+			    for line in V_cur:
+			        np.savetxt(fh, line, fmt='%.4f')
+
+			Loss_store[i] = Obj(S_cum+S_add, U_cur, V_cur)
+		else:
+			Loss_store[i] = Obj_SimChange(S_cum,S_add,U_cur,V_cur)
+
+		S_cum = S_cum + S_add
+
+		if Loss_store[i]>= (1+Theta) * Loss_bound[i]:
+			print("Begin rerun at time stamp:", i)
+			Sim = S_cum
+			S_perturb = csc_matrix(([0], ([0], [0])), shape=(N, N))
+			run_times = run_times +1
+			Run_t[run_times] = i
+
+			U[i], S[i], V[i] = svds(Sim,, K)
+			U_cur = U[i] @ np.sqrt(S[i])
+          	V_cur = V[i] @ np.sqrt(S[i])
+
+          	loss_rerun = Obj(Sim,U_cur,V_cur);
+	        Loss_store[i] = loss_rerun
+	        Loss_bound[i] = loss_rerun
+
+	    # save the current embeddings		
+	  	with open(output+'/'+datatype +'/rerunSVD/'+str(i)+'_U.txt','wb') as fh:
+		    for line in U_cur:
+		        np.savetxt(fh, line, fmt='%.4f')
+
+		with open(output+'/'+datatype +'/rerunSVD/'+str(i)+'_V.txt','wb') as fh:
+		    for line in V_cur:
+		        np.savetxt(fh, line, fmt='%.4f')
+
+	# Evaluation
+	Loss_optimal = {}
+	Loss_optimal[0] = Loss_store[0]
+	Sim = A
+
+	S_cum = Sim
+
+	for i in range(1, time_slice):
+		S_add = getAddedEdge(S_cum,dataFolder+'/'+str(i),M)
+		S_cum = S_cum + S_add
+		temp_U, temp_S, temp_V = svds(S_cum, K)
+
+		temp_U = temp_U @ np.sqrt(temp_S)
+		temp_V = temp_V @ np.sqrt(temp_S)
+
+		# save the current embeddings		
+	  	with open(output+'/'+datatype +'/optimalSVD/'+str(i)+'_U.txt','wb') as fh:
+		    for line in temp_U:
+		        np.savetxt(fh, line, fmt='%.4f')
+
+		with open(output+'/'+datatype +'/optimalSVD/'+str(i)+'_V.txt','wb') as fh:
+		    for line in temp_V:
+		        np.savetxt(fh, line, fmt='%.4f')
+
+		Loss_optimal[i] = Obj(S_cum, temp_U, temp_V)
+
+		print("Optimal Loss for ", i, ":", Loss_optimal[i])
+
+	
 
 
+
+
+
+
+
+
+
+			
 
 
 
