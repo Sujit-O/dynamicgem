@@ -2,10 +2,10 @@ import os
 import numpy as np
 from scipy.sparse import csc_matrix, find
 from scipy.sparse.linalg import svds
-from numpy import linalg as LA, pinv
+from numpy import linalg as LA
 
 
-output = '../output'
+output = './output'
 def hasmapping(filepath):
 	"""Function to map arbitrary node numbers to consecutive integer values.
            
@@ -17,9 +17,14 @@ def hasmapping(filepath):
     """
 	with open(filepath) as fp:
 		line = fp.readline()
+		line = fp.readline()
+		line = fp.readline()
+		# first three lines are metadata store by networkx
+		line = fp.readline()
 		cnt = 0
 		M = {}
 		while line:
+			line = line.split('\n')[0]
 			node = int(line.split(' ')[0])
 			M[node] =cnt
 			line = fp.readline()
@@ -37,12 +42,20 @@ def parseData(filepath, M):
         	Sparse: Sparse adjacency matrix.
     """
     # row, column and data to be passed to the sparse matrix
-    row = []
-    col = []
-    data =[]
-    with open(filepath) as fp:
+	row = []
+	col = []
+	data =[]
+	with open(filepath) as fp:
+		# import pdb 
+		# pdb.set_trace()
 		line = fp.readline()
+		line = fp.readline()
+		line = fp.readline()
+		# first three lines are metadata stored by networkx
+		line = fp.readline()
+
 		while line:
+			line = line.split('\n')[0]
 			node = line.split(' ')
 			fromNode = M[int(node[0])]
 			l = len(node)
@@ -51,9 +64,10 @@ def parseData(filepath, M):
 					toNode = M[int(node[i])]
 					row.append(fromNode)
 					col.append(toNode)
-					data.append(1)
+					data.append(1.0)
+			line=fp.readline()
 
-	return csc_matrix((data, (row, col)), shape=(len(M), len(M)))
+	return csc_matrix((data, (row, col)), shape=(len(M), len(M)), dtype= float)
 
 def Obj(Sim, U, V):
 	"""Function to  calculate the objective funciton or loss.
@@ -70,8 +84,7 @@ def Obj(Sim, U, V):
     # PS_u PS_v are the K x K matrix, pre-calculated sum for embedding vector
     # PS_u(i,j) = sum_k=1^N U(k,i)U(k,j)
     # PS_v(i,j) = sum_k=1^N V(k,i)V(k,j)
-
-    return LA.norm(Sim.toarray()- np.matmul(U,np.transpose(V)))
+	return LA.norm(Sim.toarray()- np.matmul(U,np.transpose(V)))
     # PS_u = np.matmul(np.transpose(U) , U)
     # PS_v = np.matmul(np.transpose(V) , V)
 
@@ -106,11 +119,11 @@ def deltaA(A, filepath, M):
         Returns:
         	Sparse Matrix: The delta graph
     """
-    A_new = parseData(filepath,M)
-    L = A.shape[0]
-    S_delta = csc_matrix(([0], ([0], [0])), shape=(L,L))
+	A_new = parseData(filepath,M)
+	L = A.shape[0]
+	S_delta = csc_matrix(([0], ([0], [0])), shape=(L,L), dtype = float)
 
-    [i_old, j_old, val_old] = find(A)
+	[i_old, j_old, val_old] = find(A)
 	[i_new, j_new, val_new] = find(A_new)
 
 	for k in range(len(i_new)):
@@ -138,40 +151,40 @@ def TRIP(Old_U,Old_S,Old_V, Delta_A):
         Returns:
         	 Matrices: New_U, New_S, New_V
     """
-    N, K = np.shape(Old_U)
+	N, K = np.shape(Old_U)
 
     # solve eigenvalue and eigenvectors from SVD, denote as L, X
-    Old_X = Old_U
-    for i in range(K):
-    	temp_i = np.argmax(np.absolute(Old_X[:,i]))
-    	if Old_X[temp_i,i]<0:
-    		Old_X[:,i]= - Old_X[:,i]
-    temp_v = Old_U.max()
-    temp_i = np.argmax(Old_U)
-    ind = [np.ravel_multi_index((temp_i, p), dims=(N,K), order='F') for p in range(K)]
-    temp_sign = np.sign(tempv*[Old_V.ravel()[j] for j in ind])
-    Old_L = np.multiply(np.diag(Old_S),temp_sign)
+	Old_X = Old_U
+	for i in range(K):
+		temp_i = np.argmax(np.absolute(Old_X[:,i]))
+		if Old_X[temp_i,i]<0:
+			Old_X[:,i]= - Old_X[:,i]
+	temp_v = Old_U.max()
+	temp_i = np.argmax(Old_U)
+	ind = [np.ravel_multi_index((temp_i, p), dims=(N,K), order='F') for p in range(K)]
+	temp_sign = np.sign(tempv*[Old_V.ravel()[j] for j in ind])
+	Old_L = np.multiply(np.diag(Old_S),temp_sign)
 
     # calculate the sum term
-    temp_sum = np.transpose(Old_X)@ DeltaA.toarray()@ Old_X
+	temp_sum = np.transpose(Old_X)@ DeltaA.toarray()@ Old_X
     #calculate eignevalues of changes
-    Delta_L = np.transpose(np.diag(temp_sum))
+	Delta_L = np.transpose(np.diag(temp_sum))
 
     #calculate eigenvectors of change
-    Delta_X = np.zeros([N,K])
-    for i in range(K):
-    	temp_D = np.diag(np.ones([1,k])*(Old_L[i]-Delta_L[i])-Old_L)
-    	temp_alpha = pinv(temp_D - temp_sum) @ temp_sum[:,i]
-    	Delta_X[:,i]= Old_X @ temp_alpha
+	Delta_X = np.zeros([N,K])
+	for i in range(K):
+		temp_D = np.diag(np.ones([1,k])*(Old_L[i]-Delta_L[i])-Old_L)
+		temp_alpha = LA.pinv(temp_D - temp_sum) @ temp_sum[:,i]
+		Delta_X[:,i]= Old_X @ temp_alpha
 
     #return updated result
-    New_U = Old_X + Delta_X
-    for i in range(K):
-    	New_U[:,i]= New_U[:,i] / np.sqrt(np.transpose(New_U[:,i])@ New_U[:,i])
-    New_S = np.diag(np.absolute(Old_L+Delta_L))
-    New_V = New_U@np.diag(np.sign(Old_L+ Delta_L))
+	New_U = Old_X + Delta_X
+	for i in range(K):
+		New_U[:,i]= New_U[:,i] / np.sqrt(np.transpose(New_U[:,i])@ New_U[:,i])
+	New_S = np.diag(np.absolute(Old_L+Delta_L))
+	New_V = New_U@np.diag(np.sign(Old_L+ Delta_L))
 
-    return New_U, New_S, New_V
+	return New_U, New_S, New_V
 
 def Obj_SimChange(S_ori, S_add, U, V):
 	"""Function to  calculate the objective funciton or loss.
@@ -186,7 +199,7 @@ def Obj_SimChange(S_ori, S_add, U, V):
         Returns:
         	Float: New calculcated loss value
     """
-    return LA.norm(S_ori.toarray()+S_add.toarray()- np.matmul(U,np.transpose(V)))
+	return LA.norm(S_ori.toarray()+S_add.toarray()- np.matmul(U,np.transpose(V)))
 
 def getAddedEdge(A, filepath, M):
 	"""Function to  get the difference between previous and current graph.
@@ -199,15 +212,15 @@ def getAddedEdge(A, filepath, M):
         Returns:
         	Sparse Matrix: The added graph
     """
-    A_new = parseData(filepath, M)
-    L = A.shape[0]
-    S_add = csc_matrix(([0], ([0], [0])), shape=(L,L)) 
-    [i_new, j_new, val_new] = find(A_new)
-    for k in range(len(i_new)):
-    	if A.toarray()[i_new[k],j_new[k]] != val_new[k]:
-    		S_add[i_new[k],j_new[k]] = val_new[k]
+	A_new = parseData(filepath, M)
+	L = A.shape[0]
+	S_add = csc_matrix(([0], ([0], [0])), shape=(L,L), dtype = float) 
+	[i_new, j_new, val_new] = find(A_new)
+	for k in range(len(i_new)):
+		if A.toarray()[i_new[k],j_new[k]] != val_new[k]:
+			S_add[i_new[k],j_new[k]] = val_new[k]
 
-    return S_add
+	return S_add
 
 
 def TIMERS(dataFolder, K, Theta, datatype):
@@ -220,63 +233,75 @@ def TIMERS(dataFolder, K, Theta, datatype):
       		datatype (str): type of graph 
 
     """
-    # Update the embedding
-    Update = 1
-    time_slice = len(os.listdir(dataFolder))
-    # dictionary to store the USV values
-    U = {}
-    S = {}
-    V = {}
-    # store loss for each time stamp
-    Loss_store = {}
-    # store loss bound for each time stamp
-    Loss_bound = {}
-    # store how many time the rerun is executed
-    run_times = 1
-    # store the rerun based on time slice
-    Run_t = np.zeros([time_slice+1,1])
+	# Update the embedding
+	Update = 1
+	time_slice = len(os.listdir(dataFolder))
+	# dictionary to store the USV values
+	U = {}
+	S = {}
+	V = {}
+	# store loss for each time stamp
+	Loss_store = {}
+	# store loss bound for each time stamp
+	Loss_bound = {}
+	# store how many time the rerun is executed
+	run_times = 1
+	# store the rerun based on time slice
+	Run_t = np.zeros([time_slice+1,1])
 
-    #  % Calculate Original Similarity Matrix
-  	# In this reference implementation, we assume similarity is 
-  	# adjacency matrix. Other variants shoule be straight-forward.
-  	M = hasmapping(dataFolder+'/0')
-  	# Get the first time slice data for initialization
-  	A = parseData(dataFolder+'/0', M)
-  	# Initialize the symmetric matrix
-  	Sim = A
-  	N = A.shape[0]
+	#  Calculate Original Similarity Matrix
+	# In this reference implementation, we assume similarity is 
+	# adjacency matrix. Other variants shoule be straight-forward.
+	print("Creating a hashmap for arbitrary node name to consecutive ones!")
+	M = hasmapping(dataFolder+'/0')
+	# Get the first time slice data for initialization
+	print("Parsing the data for initialization!")
+	A = parseData(dataFolder+'/0', M)
+	# Initialize the symmetric matrix
+	Sim = A
+	N = A.shape[0]
 
-  	# calculate static solution
-  	U[0], S[0], V[0] = svds(A, K)
+	# calculate static solution
+	print("Creating the svds for the first time_slice!")
+	# import pdb
+	# pdb.set_trace()
+	U[0], S[0], V[0] = svds(A, k=K)
 
-  	U_cur = U[0] @ np.sqrt(S[0])
-  	V_cur - S[0] @ np.sqrt(S[0])
+	U_cur = U[0] * np.sqrt(S[0])
+	V_cur = S[0] * np.sqrt(S[0])
 
-  	if not os.path.exists(output):
-  		os.mkdir(output)
+	if not os.path.exists(output):
+		os.mkdir(output)
 
-  	# save the current embeddings		
-  	with open(output+'/'+datatype +'/0_U.txt','wb') as fh:
-	    for line in U_cur:
-	        np.savetxt(fh, line, fmt='%.4f')
+	if not os.path.exists(output+'/'+datatype):
+		os.mkdir(output+'/'+datatype)
+
+	# save the current embeddings
+	
+	with open(output+'/'+datatype +'/0_U.txt','wb') as fh:
+		for line in np.asmatrix(U_cur):
+			np.savetxt(fh, line, fmt='%.4f')
 
 	with open(output+'/'+datatype +'/0_V.txt','wb') as fh:
-	    for line in V_cur:
-	        np.savetxt(fh, line, fmt='%.4f')
+		for line in np.asmatrix(V_cur):
+			np.savetxt(fh, line, fmt='%.4f')
 
 	# get the current loss
+	print("Calculating the loss for first time slice!")
 	Loss_store[0] = Obj(Sim, U_cur, V_cur)
+	print("Loss for first time slice:", Loss_store[0])
 	# assign the bound as current loss
 	Loss_bound[0] = Loss_store[0]
 
 	# Store the cummulative similairty matrix
 	S_cum = Sim
 	# Store the cumulative perturbation from last rerun
-	S_perturb = csc_matrix(([0], ([0], [0])), shape=(N, N))
+	S_perturb = csc_matrix(([0], ([0], [0])), shape=(N, N), dtype=float)
 
 	loss_rerun = Loss_store[0]
 
 	for i in range(1,time_slice):
+		print("calculating the embedding for time slice:",i)
 		S_add = deltaA(S_cum,dataFolder+'/'+str(i),M)
 		S_perturb = S_perturb + S_add
 
@@ -284,17 +309,17 @@ def TIMERS(dataFolder, K, Theta, datatype):
 			U[i], S[i], V[i] = TRIP(U[i-1],S[i-1],V[i-1],S_add)
 			# Note: TRIP does not insure smaller value
 
-			U_cur = U[i] @ np.sqrt(S[i])
-          	V_cur = V[i] @ np.sqrt(S[i])
+			U_cur = U[i] * np.sqrt(S[i])
+			V_cur = V[i] * np.sqrt(S[i])
 
-         	# save the current embeddings		
-		  	with open(output+'/'+datatype +'/incrementalSVD/'+str(i)+'_U.txt','wb') as fh:
-			    for line in U_cur:
-			        np.savetxt(fh, line, fmt='%.4f')
+			# save the current embeddings		
+			with open(output+'/'+datatype +'/incrementalSVD/'+str(i)+'_U.txt','wb') as fh:
+				for line in U_cur:
+					np.savetxt(fh, line, fmt='%.4f')
 
 			with open(output+'/'+datatype +'/incrementalSVD/'+str(i)+'_V.txt','wb') as fh:
-			    for line in V_cur:
-			        np.savetxt(fh, line, fmt='%.4f')
+				for line in V_cur:
+					np.savetxt(fh, line, fmt='%.4f')
 
 			Loss_store[i] = Obj(S_cum+S_add, U_cur, V_cur)
 		else:
@@ -309,22 +334,22 @@ def TIMERS(dataFolder, K, Theta, datatype):
 			run_times = run_times +1
 			Run_t[run_times] = i
 
-			U[i], S[i], V[i] = svds(Sim,, K)
-			U_cur = U[i] @ np.sqrt(S[i])
-          	V_cur = V[i] @ np.sqrt(S[i])
+			U[i], S[i], V[i] = svds(Sim, K)
+			U_cur = U[i] * np.sqrt(S[i])
+			V_cur = V[i] * np.sqrt(S[i])
 
-          	loss_rerun = Obj(Sim,U_cur,V_cur);
-	        Loss_store[i] = loss_rerun
-	        Loss_bound[i] = loss_rerun
+			loss_rerun = Obj(Sim,U_cur,V_cur);
+			Loss_store[i] = loss_rerun
+			Loss_bound[i] = loss_rerun
 
-	    # save the current embeddings		
-	  	with open(output+'/'+datatype +'/rerunSVD/'+str(i)+'_U.txt','wb') as fh:
-		    for line in U_cur:
-		        np.savetxt(fh, line, fmt='%.4f')
+			# save the current embeddings		
+			with open(output+'/'+datatype +'/rerunSVD/'+str(i)+'_U.txt','wb') as fh:
+				for line in U_cur:
+					np.savetxt(fh, line, fmt='%.4f')
 
-		with open(output+'/'+datatype +'/rerunSVD/'+str(i)+'_V.txt','wb') as fh:
-		    for line in V_cur:
-		        np.savetxt(fh, line, fmt='%.4f')
+			with open(output+'/'+datatype +'/rerunSVD/'+str(i)+'_V.txt','wb') as fh:
+				for line in V_cur:
+					np.savetxt(fh, line, fmt='%.4f')
 
 	# Evaluation
 	Loss_optimal = {}
@@ -338,23 +363,23 @@ def TIMERS(dataFolder, K, Theta, datatype):
 		S_cum = S_cum + S_add
 		temp_U, temp_S, temp_V = svds(S_cum, K)
 
-		temp_U = temp_U @ np.sqrt(temp_S)
-		temp_V = temp_V @ np.sqrt(temp_S)
+		temp_U = temp_U * np.sqrt(temp_S)
+		temp_V = temp_V * np.sqrt(temp_S)
 
 		# save the current embeddings		
-	  	with open(output+'/'+datatype +'/optimalSVD/'+str(i)+'_U.txt','wb') as fh:
-		    for line in temp_U:
-		        np.savetxt(fh, line, fmt='%.4f')
+		with open(output+'/'+datatype +'/optimalSVD/'+str(i)+'_U.txt','wb') as fh:
+			for line in temp_U:
+				np.savetxt(fh, line, fmt='%.4f')
 
 		with open(output+'/'+datatype +'/optimalSVD/'+str(i)+'_V.txt','wb') as fh:
-		    for line in temp_V:
-		        np.savetxt(fh, line, fmt='%.4f')
+			for line in temp_V:
+				np.savetxt(fh, line, fmt='%.4f')
 
 		Loss_optimal[i] = Obj(S_cum, temp_U, temp_V)
 
 		print("Optimal Loss for ", i, ":", Loss_optimal[i])
 
-	
+
 
 
 

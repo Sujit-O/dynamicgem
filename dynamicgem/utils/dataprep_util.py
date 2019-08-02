@@ -8,7 +8,7 @@ sys.path.append('./')
 from dynamicgem.graph_generation import SBM_graph
 from dynamicgem.graph_generation import dynamic_SBM_graph
 
-outdir = '../data'
+outdir = './data'
 
 
 def prep_input_dynTriad(graphs, length, dataname):

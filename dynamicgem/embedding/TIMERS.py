@@ -1,9 +1,8 @@
-disp_avlbl = True
 import os
+disp_avlbl = True
 if os.name == 'posix' and 'DISPLAY' not in os.environ:
     disp_avlbl = False
     import matplotlib
-
     matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
@@ -11,10 +10,6 @@ import numpy as np
 import scipy.io as sio
 import networkx as nx
 
-import sys
-
-sys.path.append('./')
-sys.path.append(os.path.realpath(__file__))
 
 from dynamicgem.embedding.static_graph_embedding import StaticGraphEmbedding
 from dynamicgem.utils import graph_util, plot_util, dataprep_util
@@ -26,10 +21,9 @@ from dynamicgem.evaluation import evaluate_link_prediction as lp
 
 from argparse import ArgumentParser
 from dynamicgem.graph_generation import dynamic_SBM_graph
-from dynamicgem.utils.timers_utils import TIMERS
+from dynamicgem.utils import timers_utils as tu
 import pdb
 import operator
-# from theano.printing import debugprint as dbprint, pprint
 from time import time
 
 
@@ -54,12 +48,13 @@ class TIMERS(StaticGraphEmbedding):
             'savefilesuffix': None
 
         }
+        # pdb.set_trace()
         hyper_params.update(kwargs)
         for key in hyper_params.keys():
             self.__setattr__('_%s' % key, hyper_params[key])
-        for dictionary in hyper_dict:
-            for key in dictionary:
-                self.__setattr__('_%s' % key, dictionary[key])
+        # for dictionary in hyper_dict:
+        #     for key in dictionary:
+        #         self.__setattr__('_%s' % key, dictionary[key])
 
     def get_method_name(self):
         return self._method_name
@@ -68,7 +63,7 @@ class TIMERS(StaticGraphEmbedding):
         return '%s' % (self._method_name)
 
     def learn_embedding(self, graph=None):
-        timers = TIMERS(self._datafile, self._K / 2, self._Theta, self._datatype, nargout=0)
+        timers = tu.TIMERS(self._datafile, self._K // 2, self._Theta, self._datatype)
 
     def plotresults(self, dynamic_sbm_series):
 
@@ -130,15 +125,15 @@ if __name__ == '__main__':
                         type=str,
                         help='Type of data to test the code')
     parser.add_argument('-l', '--timelength',
-                        default=10,
+                        default=5,
                         type=int,
                         help='Number of time series graph to generate')
     parser.add_argument('-nm', '--nodemigration',
-                        default=10,
+                        default=5,
                         type=int,
                         help='number of nodes to migrate')
     parser.add_argument('-emb', '--embeddimension',
-                        default=256,
+                        default=16,
                         type=float,
                         help='embedding dimension')
     parser.add_argument('-theta', '--theta',
@@ -150,7 +145,7 @@ if __name__ == '__main__':
                         type=str,
                         help='directory for storing results')
     parser.add_argument('-sm', '--samples',
-                        default=5000,
+                        default=10,
                         type=int,
                         help='samples for test data')
     parser.add_argument('-exp', '--exp',
@@ -165,7 +160,7 @@ if __name__ == '__main__':
     sample = args.samples
 
     if args.testDataType == 'sbm_cd':
-        node_num = 1000
+        node_num = 100
         community_num = 2
         node_change_num = args.nodemigration
         dynamic_sbm_series = dynamic_SBM_graph.get_community_diminish_series_v2(node_num,
