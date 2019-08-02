@@ -1,7 +1,7 @@
 import os
 import numpy as np
 from scipy.sparse import csc_matrix, find
-from scipy.sparse.linalg import svds
+from scipy.sparse.linalg import svds, eigs
 from numpy import linalg as LA
 
 
@@ -128,7 +128,7 @@ def deltaA(A, filepath, M):
 
 	for k in range(len(i_new)):
 		temp_old = A[i_new[k],j_new[k]]
-		S_delta[i_new(k),j_new(k)]=val_new[k]-temp_old
+		S_delta[i_new[k],j_new[k]]=val_new[k]-temp_old
 
 	for k in range(len(i_old)):
 		temp_new = A_new[i_old[k],j_old[k]]
@@ -159,21 +159,23 @@ def TRIP(Old_U,Old_S,Old_V, Delta_A):
 		temp_i = np.argmax(np.absolute(Old_X[:,i]))
 		if Old_X[temp_i,i]<0:
 			Old_X[:,i]= - Old_X[:,i]
-	temp_v = Old_U.max()
-	temp_i = np.argmax(Old_U)
-	ind = [np.ravel_multi_index((temp_i, p), dims=(N,K), order='F') for p in range(K)]
-	temp_sign = np.sign(tempv*[Old_V.ravel()[j] for j in ind])
+	temp_v = Old_U.max(axis=0)
+	temp_i = np.argmax(Old_U, axis = 0)
+	# import pdb
+	# pdb.set_trace()
+	ind = [np.ravel_multi_index((i, p), dims=(N,K), order='F') for i,p in zip(temp_i,range(K))]
+	temp_sign = np.sign(temp_v*[Old_V.ravel()[j] for j in ind])
 	Old_L = np.multiply(np.diag(Old_S),temp_sign)
 
     # calculate the sum term
-	temp_sum = np.transpose(Old_X)@ DeltaA.toarray()@ Old_X
+	temp_sum = np.transpose(Old_X)@ Delta_A.toarray()@ Old_X
     #calculate eignevalues of changes
 	Delta_L = np.transpose(np.diag(temp_sum))
 
     #calculate eigenvectors of change
 	Delta_X = np.zeros([N,K])
 	for i in range(K):
-		temp_D = np.diag(np.ones([1,k])*(Old_L[i]-Delta_L[i])-Old_L)
+		temp_D = np.diag(np.ones([1,K])*(Old_L[i]-Delta_L[i])-Old_L)
 		temp_alpha = LA.pinv(temp_D - temp_sum) @ temp_sum[:,i]
 		Delta_X[:,i]= Old_X @ temp_alpha
 
@@ -182,8 +184,9 @@ def TRIP(Old_U,Old_S,Old_V, Delta_A):
 	for i in range(K):
 		New_U[:,i]= New_U[:,i] / np.sqrt(np.transpose(New_U[:,i])@ New_U[:,i])
 	New_S = np.diag(np.absolute(Old_L+Delta_L))
-	New_V = New_U@np.diag(np.sign(Old_L+ Delta_L))
-
+	New_V = New_U*np.diag(np.sign(Old_L+ Delta_L))
+	# import pdb
+	# pdb.set_trace()
 	return New_U, New_S, New_V
 
 def Obj_SimChange(S_ori, S_add, U, V):
@@ -222,6 +225,49 @@ def getAddedEdge(A, filepath, M):
 
 	return S_add
 
+def RefineBound(S_ori, S_add, Loss_ori, K):
+	"""Function to  calculate the objective funciton or loss.
+       
+       Loss_Bound = Loss_ori + trace_change(S * S^T) - eigs(delta(S *S^T),K)
+
+        Args:
+            S_ori (Sparse Matrix): Sparse scipy of original adjancey matrix
+            S_add (Sparse Matrix): Sparse scipy of added adjancey matrix
+            K (int): Embedding dimension
+            loss_ori (float): Original loss value
+	
+        Returns:
+        	Float: New calculcated loss bound
+    """
+    # Calculate the trace change
+	
+	S_overlap = (S_add != 0).multiply(S_ori)
+	S_temp = S_add + S_overlap
+	trace_change = csc_matrix.sum(S_temp.multiply(S_temp) - S_overlap.multiply(S_overlap))
+
+	# Calculate eigenvalues sum of delta(S * S^T)
+  	# Note: we only need to deal with non-zero rows/columns
+	S_temp = S_ori.dot(S_add)
+
+	# import pdb
+	# pdb.set_trace()
+	S_temp = S_temp + S_temp.transpose() + S_add.dot(S_add)
+	# _,S_choose,_ = find(csc_matrix.sum(S_temp, axis=0))
+	# S_temp = S_temp[S_choose,S_choose]
+
+	temp_eigs,_ = eigs(S_temp, min(2*K, S_temp.shape[0]))
+	temp_eigs = np.absolute(temp_eigs)
+	temp_eigs =temp_eigs[temp_eigs>=0]
+	temp_eigs=np.sort(temp_eigs)[::-1]
+
+	if len(temp_eigs)>=K:
+		eigen_sum = sum(temp_eigs[:K])
+	else:
+		temp_l = len(temp_eigs)
+		eigen_sum = sum(temp_eigs)+temp_eigs[temp_l-1]*(K-temp_l)
+
+
+	return Loss_ori + trace_change - eigen_sum
 
 def TIMERS(dataFolder, K, Theta, datatype):
 	"""Main timer function to perform embedding.
@@ -268,7 +314,7 @@ def TIMERS(dataFolder, K, Theta, datatype):
 	U[0], S[0], V[0] = svds(A, k=K)
 
 	U_cur = U[0] * np.sqrt(S[0])
-	V_cur = S[0] * np.sqrt(S[0])
+	V_cur = np.transpose(V[0]) * np.sqrt(S[0])
 
 	if not os.path.exists(output):
 		os.mkdir(output)
@@ -325,18 +371,19 @@ def TIMERS(dataFolder, K, Theta, datatype):
 		else:
 			Loss_store[i] = Obj_SimChange(S_cum,S_add,U_cur,V_cur)
 
+		Loss_bound[i] = RefineBound(Sim,S_perturb,loss_rerun,K)	
 		S_cum = S_cum + S_add
 
 		if Loss_store[i]>= (1+Theta) * Loss_bound[i]:
 			print("Begin rerun at time stamp:", i)
 			Sim = S_cum
-			S_perturb = csc_matrix(([0], ([0], [0])), shape=(N, N))
+			S_perturb = csc_matrix(([0], ([0], [0])), shape=(N, N),dtype=float)
 			run_times = run_times +1
 			Run_t[run_times] = i
 
 			U[i], S[i], V[i] = svds(Sim, K)
 			U_cur = U[i] * np.sqrt(S[i])
-			V_cur = V[i] * np.sqrt(S[i])
+			V_cur = np.transpose(V[i]) * np.sqrt(S[i])
 
 			loss_rerun = Obj(Sim,U_cur,V_cur);
 			Loss_store[i] = loss_rerun
@@ -361,10 +408,12 @@ def TIMERS(dataFolder, K, Theta, datatype):
 	for i in range(1, time_slice):
 		S_add = getAddedEdge(S_cum,dataFolder+'/'+str(i),M)
 		S_cum = S_cum + S_add
-		temp_U, temp_S, temp_V = svds(S_cum, K)
+		temp_U, temp_S, temp_V = svds(S_cum, k=K)
 
+		# import pdb
+		# pdb.set_trace()
 		temp_U = temp_U * np.sqrt(temp_S)
-		temp_V = temp_V * np.sqrt(temp_S)
+		temp_V = np.transpose(temp_V) * np.sqrt(temp_S)
 
 		# save the current embeddings		
 		with open(output+'/'+datatype +'/optimalSVD/'+str(i)+'_U.txt','wb') as fh:
