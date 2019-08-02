@@ -26,7 +26,7 @@ from dynamicgem.evaluation import evaluate_link_prediction as lp
 
 from argparse import ArgumentParser
 from dynamicgem.graph_generation import dynamic_SBM_graph
-import TIMERS_ALL
+from dynamicgem.utils.timers_utils import TIMERS
 import pdb
 import operator
 # from theano.printing import debugprint as dbprint, pprint
@@ -68,8 +68,7 @@ class TIMERS(StaticGraphEmbedding):
         return '%s' % (self._method_name)
 
     def learn_embedding(self, graph=None):
-        timers = TIMERS_ALL.initialize()
-        timers.TIMERS(self._datafile, self._K / 2, self._Theta, self._datatype, nargout=0)
+        timers = TIMERS(self._datafile, self._K / 2, self._Theta, self._datatype, nargout=0)
 
     def plotresults(self, dynamic_sbm_series):
 
