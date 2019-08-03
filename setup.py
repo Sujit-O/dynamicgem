@@ -20,7 +20,7 @@ VERSION = __version__
 setuptools.setup(
     name='dynamicgem',
     version=VERSION,
-    author="Sujit Rokka Chhetri, Palash Goyal, Martinez Canedo, Arquimedes",
+    author="Palash Goyal, Sujit Rokka Chhetri,  Martinez Canedo, Arquimedes",
     author_email="sujitchhetri@gmail.com",
     description="A Python library for Dynamic Graph Embedding Methods",
     long_description=long_description,

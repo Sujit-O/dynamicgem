@@ -9,12 +9,10 @@ if os.name == 'posix' and 'DISPLAY' not in os.environ:
 import matplotlib.pyplot as plt
 import networkx as nx
 import sys
-sys.path.append('./')
-sys.path.append(os.path.realpath(__file__))
-from .static_graph_embedding import StaticGraphEmbedding
+from dynamicgem.embedding.static_graph_embedding import StaticGraphEmbedding
 from dynamicgem.utils import graph_util, plot_util, dataprep_util
 from dynamicgem.evaluation import visualize_embedding as viz
-from .sdne_utils import *
+from dynamicgem.utils.sdne_utils import *
 from keras import backend as KBack
 import tensorflow as tf
 import argparse
