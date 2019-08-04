@@ -12,6 +12,7 @@
 /data/
 /output/
 /results_link_all/
+TIMERS_Matlab/
 
 dynamicgem/intermediate
 dynamicgem/dataset
