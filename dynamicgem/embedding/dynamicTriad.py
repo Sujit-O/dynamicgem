@@ -69,8 +69,7 @@ class dynamicTriad(StaticGraphEmbedding):
        sm   : samples for test data
     """
 
-    def __init__(self, d, *hyper_dict, **kwargs):
-        self._d = d
+    def __init__(self, *hyper_dict, **kwargs):
         hyper_params = {
             'method_name': 'Dynamic TRIAD',
             'modelfile': None,
@@ -158,7 +157,7 @@ class dynamicTriad(StaticGraphEmbedding):
         return self._method_name
 
     def get_method_summary(self):
-        return '%s_%d' % (self._method_name, self._d)
+        return '%s_%d' % (self._method_name)
 
     def learn_embedding(self):
 
@@ -437,7 +436,7 @@ if __name__ == '__main__':
                         type=str,
                         help='Type of data to test the code')
     parser.add_argument('-nm', '--nodemigration',
-                        default=10,
+                        default=2,
                         type=int,
                         help='number of nodes to migrate')
     parser.add_argument('-iter', '--niters',
@@ -454,15 +453,15 @@ if __name__ == '__main__':
     parser.add_argument('-b', '--batchsize',
                         type=int,
                         help="batchsize for training",
-                        default=1000)
+                        default=100)
     parser.add_argument('-n', '--nsteps',
                         type=int,
                         help="number of time steps",
-                        default=10)
+                        default=4)
     parser.add_argument('-K', '--embdim',
                         type=int,
                         help="number of embedding dimensions",
-                        default=128)
+                        default=32)
     parser.add_argument('-l', '--stepsize',
                         type=int,
                         help="size of of a time steps",
@@ -544,7 +543,7 @@ if __name__ == '__main__':
     length = args.nsteps
 
     if args.testDataType == 'sbm_cd':
-        node_num = 1000
+        node_num = 200
         community_num = 2
         node_change_num = args.nodemigration
         dynamic_sbm_series = dynamic_SBM_graph.get_community_diminish_series_v2(node_num,

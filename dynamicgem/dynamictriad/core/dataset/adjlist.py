@@ -59,10 +59,6 @@ class Dataset(DatasetBase):
 
         return ret
 
-    # required by Archivable(Archive and Cache)
-    # def _full_archive(self, name=None):
-    #     return self.archive(name)
-
     def archive(self, name=None):
         ar = super(Dataset, self).archive()
         return ar

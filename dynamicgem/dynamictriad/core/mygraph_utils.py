@@ -5,6 +5,7 @@ import os
 import ctypes
 # mygraph=ctypes.cdll.LoadLibrary(os.path.realpath('')+'/dynamicgem/dynamictriad/core/mygraph.so')
 import dynamicgem.dynamictriad.core.mygraph as mygraph
+import networkx as nx
 
 
 def type2python(tp):
@@ -85,13 +86,16 @@ def load_adjlist(fn, node_type='string', weight_type='float'):
     py_weight_type = type2python(weight_type)
 
     edgeset = set()  # check if the graph is undirected
-    g = mygraph.Graph(node_type, weight_type)
+    # g = mygraph.Graph(node_type, weight_type)
+    g = nx.DiGraph()
     for line in open(fn, 'r'):
         fields = line.split()
 
+        import pdb
+        pdb.set_trace()
         n = py_node_type(fields[0])
-        if not g.exists(n):
-            g.add_vertex(n)
+        if not g.has_node(n):
+            g.add_node(n)
 
         for v, w in zip(fields[1::2], fields[2::2]):
             v = py_node_type(v)

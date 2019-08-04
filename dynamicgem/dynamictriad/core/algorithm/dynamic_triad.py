@@ -17,11 +17,7 @@ from dynamicgem.dynamictriad.core import utils
 from dynamicgem.dynamictriad.core import gconfig as gconf
 from dynamicgem.dynamictriad.core.algorithm.embutils import TrainFlow, WithData, Validator
 
-try:
-    import dynamicgem.dynamictriad.core.algorithm.dynamic_triad_cimpl as cimpl
-except ImportError:
-    warnings.warn("dynamic_triad_cimpl.so not found, falling back to python implementation")
-    cimpl = None
+cimpl = None
 
 
 class Model(Sampler, TrainFlow, WithData, Validator):
