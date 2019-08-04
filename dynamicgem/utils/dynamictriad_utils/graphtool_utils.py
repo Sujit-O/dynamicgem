@@ -4,7 +4,7 @@ import graph_tool as gt
 import itertools
 from collections import defaultdict
 import numpy as np
-import dynamicgem.dynamictriad.core.utils
+import dynamicgem.utils.dynamictriad_utils.utils
 try:
     from itertools import izip
 except:

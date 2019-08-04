@@ -2,20 +2,21 @@ from __future__ import print_function
 from __future__ import print_function
 
 import keras.backend as K
-from dynamicgem.dynamictriad.core.kerasext import keras_backend_patches
 from keras import optimizers, constraints
 import numpy as np
 import math
 import warnings
 import sys
-from dynamicgem.dynamictriad.core.algorithm.samplers.pos_neg_tri import Sampler
 try:
     from sklearn.model_selection import cross_val_score, KFold, StratifiedKFold
 except ImportError:
     from sklearn.cross_validation import cross_val_score, KFold, StratifiedKFold
-from dynamicgem.dynamictriad.core import utils
-from dynamicgem.dynamictriad.core import gconfig as gconf
-from dynamicgem.dynamictriad.core.algorithm.embutils import TrainFlow, WithData, Validator
+
+from dynamicgem.utils.dynamictriad_utils.algorithm.samplers.pos_neg_tri import Sampler
+from dynamicgem.utils.dynamictriad_utils.kerasext import keras_backend_patches
+from dynamicgem.utils.dynamictriad_utils import utils
+from dynamicgem.utils.dynamictriad_utils import gconfig as gconf
+from dynamicgem.utils.dynamictriad_utils.algorithm.embutils import TrainFlow, WithData, Validator
 
 cimpl = None
 

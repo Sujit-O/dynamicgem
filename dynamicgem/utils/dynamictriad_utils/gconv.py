@@ -1,14 +1,14 @@
 from __future__ import print_function
 
-import dynamicgem.dynamictriad.core.graphtool_utils as gtutils
-import dynamicgem.dynamictriad.core.utils as utils
+import dynamicgem.utils.dynamictriad_utils.graphtool_utils as gtutils
+import ddynamicgem.utils.dynamictriad_utils.utils as utils
 # import dynamicgem.dynamictriad.core.mygraph
 
 import ctypes
 import os
 # mygraph=ctypes.cdll.LoadLibrary(os.path.realpath('')+'/dynamicgem/dynamictriad/core/mygraph.so')
-import dynamicgem.dynamictriad.core.mygraph as mygraph
-import dynamicgem.dynamictriad.core.mygraph_utils as mgutils
+import dynamicgem.utils.dynamictriad_utils.mygraph as mygraph
+import dynamicgem.utils.dynamictriad_utils.mygraph_utils as mgutils
 
 def graphtool2mygraph(g, **_):
     names = g.vp.get('name')

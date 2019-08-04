@@ -1,8 +1,8 @@
 from __future__ import print_function
 from __future__ import absolute_import
 
-from dynamicgem.dynamictriad.core import utils, gconv
-from dynamicgem.dynamictriad.core import gconfig as gconf
+from dynamicgem.utils.dynamictriad_utils import utils, gconv
+from dynamicgem.utils.dynamictriad_utils import gconfig as gconf
 import random
 import numpy as np
 from collections import defaultdict

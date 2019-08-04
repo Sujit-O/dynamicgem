@@ -11,11 +11,13 @@ from __future__ import print_function
 from __future__ import absolute_import
 
 import sys
-from . import pos_neg
-from core.algorithm.embutils import WithData
-import core.gconfig as gconf
-from core import utils
 from collections import defaultdict
+
+from dynamicgem.utils.dynamictriad_utils.algorithm.samplers import pos_neg
+from dynamicgem.utils.dynamictriad_utils.algorithm.embutils import WithData
+import dynamicgem.utils.dynamictriad_utils.gconfig as gconf
+from dynamicgem.utils.dynamictriad_utils import utils
+
 
 
 class Sampler(pos_neg.Sampler, WithData):

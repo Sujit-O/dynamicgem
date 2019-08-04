@@ -1,5 +1,5 @@
 import sys
-from dynamicgem.dynamictriad.core import gconfig
+from dynamicgem.utils.dynamictriad_utils import gconfig
 from os import path
 
 file_dir = path.dirname(path.abspath(__file__))

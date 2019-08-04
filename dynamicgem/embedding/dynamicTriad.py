@@ -1,36 +1,29 @@
 from __future__ import print_function
+
 disp_avlbl = True
 import os
 if os.name == 'posix' and 'DISPLAY' not in os.environ:
     disp_avlbl = False
     import matplotlib
-
     matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-import networkx as nx
+
 import sys
-from dynamicgem.embedding.static_graph_embedding import StaticGraphEmbedding
-from dynamicgem.utils import graph_util, plot_util, dataprep_util
-from dynamicgem.evaluation import visualize_embedding as viz
-from dynamicgem.utils.sdne_utils import *
-from keras import backend as KBack
 import tensorflow as tf
 import argparse
-from dynamicgem.graph_generation import dynamic_SBM_graph
 import operator
 import time
-from os import sys, path
-sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
-from dynamicgem.dynamictriad.core import *
-from six.moves import cPickle
+import os
 import importlib
-from os.path import isfile
-import dynamicgem.dynamictriad.core.dataset.dataset_utils as du
-import dynamicgem.dynamictriad.core.algorithm.embutils as eu
-from dynamicgem.evaluation import evaluate_link_prediction as lp
 import pdb
-from sklearn.linear_model import LogisticRegression
 import random
+
+from six.moves import cPickle
+from keras import backend as KBack
+from os.path import isfile
+import matplotlib.pyplot as plt
+import networkx as nx
+
+from sklearn.linear_model import LogisticRegression
 
 try:
     from sklearn.model_selection import cross_val_score, KFold, StratifiedKFold
@@ -38,6 +31,19 @@ except ImportError:
     from sklearn.cross_validation import cross_val_score, KFold, StratifiedKFold
 from sklearn import svm
 from sklearn.metrics import f1_score, precision_score, recall_score, accuracy_score
+
+
+from dynamicgem.embedding.static_graph_embedding import StaticGraphEmbedding
+from dynamicgem.utils import graph_util, plot_util, dataprep_util
+from dynamicgem.evaluation import visualize_embedding as viz
+from dynamicgem.utils.sdne_utils import *
+from dynamicgem.graph_generation import dynamic_SBM_graph
+from dynamicgem.utils.dynamictriad_utils import *
+import dynamicgem.utils.dynamictriad_utils.dataset.dataset_utils as du
+import dynamicgem.utils.dynamictriad_utils.algorithm.embutils as eu
+from dynamicgem.evaluation import evaluate_link_prediction as lp
+
+
 
 
 class dynamicTriad(StaticGraphEmbedding):

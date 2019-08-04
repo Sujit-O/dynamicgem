@@ -6,8 +6,8 @@ import re
 from six.moves import cPickle, reduce
 from collections import Counter
 from dataset_utils import DatasetBase
-import core.gconfig as gconf
-from core import utils, mygraph
+import dynamicgem.utils.dynamictriad_utils.gconfig as gconf
+from dynamicgem.utils.dynamictriad_utils import utils, mygraph
 
 
 class Dataset(DatasetBase):

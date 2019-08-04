@@ -3,10 +3,11 @@ from __future__ import absolute_import
 
 import numpy as np
 import random
-from . import sampler
-from core import gconfig as gconf
-from core import utils
-from core.algorithm.embutils import WithData
+
+from dynamicgem.utils.dynamictriad_utils.algorithm.samplers import sampler
+from dynamicgem.utils.dynamictriad_utils import gconfig as gconf
+from dynamicgem.utils.dynamictriad_utils  import utils
+from dynamicgem.utils.dynamictriad_utils.algorithm.embutils import WithData
 
 
 class Sampler(sampler.Sampler, WithData):

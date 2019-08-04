@@ -9,8 +9,9 @@ try:
     from sklearn.model_selection import cross_val_score, KFold, StratifiedKFold
 except ImportError:
     from sklearn.cross_validation import cross_val_score, KFold, StratifiedKFold
-from core import utils
-from core import gconfig as gconf
+
+from dynamicgem.utils.dynamictriad_utils import utils
+from dynamicgem.utils.dynamictriad_utils import gconfig as gconf
 
 
 class WithData(object):
