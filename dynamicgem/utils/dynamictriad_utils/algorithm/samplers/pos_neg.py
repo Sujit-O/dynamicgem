@@ -25,27 +25,24 @@ class Sampler(sampler.Sampler, WithData):
         data = []
         weight = []
         # TODO: remove this ugly fix
-        nodenames = list(self.dataset.gtgraphs['any'].vp['name'])
+        nodenames = list(self.dataset.gtgraphs['any'].nodes())
         for i in range(begin, end):
-            assert not self.dataset.gtgraphs[i].is_directed()
-            for e in self.dataset.gtgraphs[i].edges():
-                src, tgt = int(e.source()), int(e.target())
+            assert not self.dataset.gtgraphs[i].is_directed(), ("graph direct:",self.dataset.gtgraphs[i].is_directed())
+            for src,tgt in list(self.dataset.gtgraphs[i].edges()):
                 if src > tgt:
                     src, tgt = tgt, src
-                nsrc, ntgt = nodenames[src], nodenames[tgt]
-                # for debug
                 if gconf.debug:  # because .edge is slow
-                    assert self.dataset.mygraphs[i].exists(nsrc, ntgt), \
-                        "{}: {} {}".format(i, nsrc, ntgt)
+                    assert self.dataset.mygraphs[i].has_edge(src, tgt), \
+                        "{}: {} {}".format(i, src, tgt)
 
                 data.append([i, src, tgt])
-                weight.append(self.dataset.mygraphs[i].edge(nsrc, ntgt))
+                weight.append(self.dataset.mygraphs[i].get_edge_data(src, tgt)['weight'])
         data = np.array(data, dtype='int32')
         weight = np.array(weight, dtype='float32')
         if len(data) == 0:
             raise RuntimeError("No positive sample is generated given an empty graph")
-        assert len(data) == sum([g.num_edges() for g in self.dataset.gtgraphs[begin:end]]), \
-            "{}, {}".format(len(data), sum([g.num_edges() for g in self.dataset.gtgraphs[begin:end]]))
+        assert len(data) == sum([g.number_of_edges() for g in self.dataset.gtgraphs[begin:end]]), \
+            "{}, {}".format(len(data), sum([g.number_of_edges() for g in self.dataset.gtgraphs[begin:end]]))
         return [data, weight]
 
     def pretrain_begin(self, begin, end):
@@ -59,7 +56,7 @@ class Sampler(sampler.Sampler, WithData):
     def __make_neg(self, posdata, negdup=1):
         negdata = []
         # TODO: this is an ugly fix, try to add indexing support in mygraph
-        nodenames = list(self.dataset.gtgraphs['any'].vp['name'])
+        nodenames = list(self.dataset.gtgraphs['any'].nodes())
 
         for d in posdata:
             k, src, tgt = d
@@ -73,11 +70,11 @@ class Sampler(sampler.Sampler, WithData):
                     else:
                         # TODO: although it is almost impossible for a node to have all edges, check this in advance
                         #new_src = random.randint(0, self.dataset.gtgraphs[k].num_vertices() - 1)
-                        new_src = utils.crandint(self.dataset.gtgraphs[k].num_vertices())
+                        new_src = utils.crandint(self.dataset.gtgraphs[k].number_of_nodes())
                         assert not self.dataset.gtgraphs[k].is_directed()
-                        while self.dataset.mygraphs[k].exists(nodenames[new_src], nodenames[tgt]):
+                        while self.dataset.mygraphs[k].has_edge(nodenames[new_src], nodenames[tgt]):
                             #new_src = random.randint(0, self.dataset.gtgraphs[k].num_vertices() - 1)
-                            new_src = utils.crandint(self.dataset.gtgraphs[k].num_vertices())
+                            new_src = utils.crandint(self.dataset.gtgraphs[k].number_of_nodes())
                         negdata[-1].extend([new_src, tgt])
                 else:  # replace target
                     if self.__enable_cache:
@@ -87,10 +84,10 @@ class Sampler(sampler.Sampler, WithData):
                         negdata[-1].extend([src, new_tgt])
                     else:
                         #new_tgt = random.randint(0, self.dataset.gtgraphs[k].num_vertices() - 1)
-                        new_tgt = utils.crandint(self.dataset.gtgraphs[k].num_vertices())
-                        while self.dataset.mygraphs[k].exists(nodenames[src], nodenames[new_tgt]):
+                        new_tgt = utils.crandint(self.dataset.gtgraphs[k].number_of_nodes())
+                        while self.dataset.mygraphs[k].has_edge(nodenames[src], nodenames[new_tgt]):
                             #new_tgt = random.randint(0, self.dataset.gtgraphs[k].num_vertices() - 1)
-                            new_tgt = utils.crandint(self.dataset.gtgraphs[k].num_vertices())
+                            new_tgt = utils.crandint(self.dataset.gtgraphs[k].number_of_nodes())
                         negdata[-1].extend([src, new_tgt])
         negdata = np.array(negdata)
         assert negdata.shape == (len(posdata), 2 * negdup), "{}, {}".format(negdata.shape, (len(posdata), 2 * negdup))

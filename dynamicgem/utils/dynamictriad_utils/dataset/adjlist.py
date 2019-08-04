@@ -1,5 +1,7 @@
 from __future__ import print_function
 
+import networkx as nx
+
 from dynamicgem.utils.dynamictriad_utils.dataset.dataset_utils import DatasetBase
 from dynamicgem.utils.dynamictriad_utils import mygraph_utils as mgutils
 
@@ -15,7 +17,7 @@ class Dataset(DatasetBase):
 
         DatasetBase.__init__(self, datafn, localtime, nsteps, stepsize, stepstride, offset, dataname)
 
-        self.__vertices = None
+        self.vertices = None
 
     @property
     def name(self):
@@ -29,32 +31,42 @@ class Dataset(DatasetBase):
         return str(unit)
 
     def __check_vertices(self, vs):
-        assert len(vs) == len(self.__vertices), (len(vs), len(self.__vertices))
+        
+        assert len(vs) == len(self.vertices), (len(vs), len(self.vertices))
         for i in range(len(vs)):
-            assert vs[i] == self.__vertices[i], (i, vs[i], self.__vertices[i])
+            assert vs[i] == self.vertices[i], (i, vs[i], self.vertices[i])
 
     # required by DyanmicGraph
     def _load_unit_graph(self, tm):
         tm = self._time2unit(tm)
         fn = "{}/{}".format(self.__datadir, tm)
         g = mgutils.load_adjlist(fn)
-        if self.__vertices is None:
-            self.__vertices = g.vertices()
+        if self.vertices is None:
+            self.vertices = list(g.nodes())
+            self.vertices.sort()
         else:
             try:
-                self.__check_vertices(g.vertices())  # ensure all graphs share a same set of vertices
+                nodes= list(g.nodes())
+                nodes.sort()
+                self.__check_vertices(nodes)  # ensure all graphs share a same set of vertices
             except AssertionError as e:
+                if hasattr(e, 'message'):
+                    msg = e.message
+                else:
+                    msg = e
+                import pdb
+                pdb.set_trace()
                 raise RuntimeError("Vertices in graph file {} are not compatible with files already loaded: {}"
-                                   .format(fn, e.message))
+                                   .format(fn, msg))
         return g
 
     def _merge_unit_graphs(self, graphs, curstep):
         curunit = self._time2unit(self.step2time(curstep))
         print("merging graph from year {} to {}".format(curunit, curunit + self.stepsize - 1))
 
-        ret = mygraph.Graph(graphs[0].node_type(), graphs[0].weight_type())
+        ret = nx.DiGraph()
         for g in graphs:
-            ret.merge(g, free_other=False)
+            ret = nx.compose(ret,g)
 
         return ret
 

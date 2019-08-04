@@ -133,6 +133,8 @@ class dynamicTriad(StaticGraphEmbedding):
 
     def export(self, vertices, data, outdir):
 
+        if not os.path.exists(outdir):
+            os.mkdir(outdir)
         outdir = outdir + '/' + self._datatype
         if not os.path.exists(outdir):
             os.mkdir(outdir)
@@ -196,7 +198,7 @@ class dynamicTriad(StaticGraphEmbedding):
         tm = TrainModel(ds, pretrain_size=self._pretrain_size, embdim=self._embdim, beta=self._beta,
                         lr=self._lr, batchsize=self._batchsize, sampling_args=self._sampling_args)
 
-        edgecnt = [g.num_edges() for g in ds.gtgraphs]
+        edgecnt = [g.number_of_edges() for g in ds.gtgraphs]
         k_edgecnt = sum(edgecnt[:self._pretrain_size])
         print("{} edges in pretraining graphs".format(k_edgecnt))
 
@@ -268,7 +270,7 @@ class dynamicTriad(StaticGraphEmbedding):
             print("saving output to {}".format(self._outdir))
             tm.restore_model(maxmodel)
             tm.pretrain_end()
-            self.export(tm.dataset.mygraphs['any'].vertices(), tm.export(), self._outdir)
+            self.export(list(tm.dataset.mygraphs['any'].nodes()), tm.export(), self._outdir)
 
         # online training disabled
         startstep = int(tm.dataset.time2step(self._starttime))
@@ -448,7 +450,7 @@ if __name__ == '__main__':
     parser.add_argument('-iter', '--niters',
                         type=int,
                         help="number of optimization iterations",
-                        default=20)
+                        default=2)
     parser.add_argument('-m', '--starttime',
                         type=str,
                         help=argparse.SUPPRESS,
@@ -528,6 +530,8 @@ if __name__ == '__main__':
                         type=int,
                         help='samples for test data')
     args = parser.parse_args()
+    if not os.path.exists(args.outdir):
+        os.mkdir(args.outdir)
     args.embdir = args.outdir + '/dynTriad/' + args.testDataType
     args.cachefn = '/tmp/' + args.testDataType
     args.beta = [args.beta_smooth, args.beta_triad]
