@@ -24,7 +24,7 @@ except ImportError as e:
     sys.argv = _old_argv
     print("Cython not avaiable, falling back to python implemented utils")
     print("Err msg: {}".format(e))
-    from dynamicgem.dynamictriad.core.utils_py import *
+    from dynamicgem.utils.dynamictriad_utils.utils_py import *
     __impl__ = 'python'
 
 

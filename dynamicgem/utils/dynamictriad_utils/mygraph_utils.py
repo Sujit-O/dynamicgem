@@ -4,7 +4,6 @@ import math
 import os
 import ctypes
 # mygraph=ctypes.cdll.LoadLibrary(os.path.realpath('')+'/dynamicgem/dynamictriad/core/mygraph.so')
-import dynamicgem.utils.dynamictriad_utils.mygraph as mygraph
 import networkx as nx
 
 

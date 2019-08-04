@@ -13,7 +13,6 @@ except ImportError:
     from sklearn.cross_validation import cross_val_score, KFold, StratifiedKFold
 
 from dynamicgem.utils.dynamictriad_utils.algorithm.samplers.pos_neg_tri import Sampler
-from dynamicgem.utils.dynamictriad_utils.kerasext import keras_backend_patches
 from dynamicgem.utils.dynamictriad_utils import utils
 from dynamicgem.utils.dynamictriad_utils import gconfig as gconf
 from dynamicgem.utils.dynamictriad_utils.algorithm.embutils import TrainFlow, WithData, Validator

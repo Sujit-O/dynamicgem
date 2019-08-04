@@ -9,6 +9,8 @@
 /tmp/
 /intermediate/
 /dataset/
+/data/
+/output/
 
 dynamicgem/intermediate
 dynamicgem/dataset

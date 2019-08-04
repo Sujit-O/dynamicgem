@@ -502,7 +502,7 @@ if __name__ == '__main__':
                         default=1)
     parser.add_argument('--datasetmod',
                         type=str,
-                        default='core.dataset.adjlist',
+                        default='dynamicgem.utils.dynamictriad_utils.dataset.adjlist',
                         help='module name for dataset loading',
                         )
     parser.add_argument('--validation',
@@ -533,7 +533,7 @@ if __name__ == '__main__':
     args.beta = [args.beta_smooth, args.beta_triad]
     # some fixed arguments in published code
     args.pretrain_size = args.nsteps
-    args.trainmod = 'dynamictriad.core.algorithm.dynamic_triad'
+    args.trainmod = 'dynamicgem.utils.dynamictriad_utils.algorithm.dynamic_triad'
     args.sampling_args = {}
     args.debug = False
     args.scale = 1
