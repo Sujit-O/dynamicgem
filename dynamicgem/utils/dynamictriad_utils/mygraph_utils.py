@@ -72,7 +72,7 @@ def save_adjlist(g, fn):
     fh.close()
 
 
-def load_adjlist(fn, node_type='string', weight_type='float'):
+def load_adjlist(fn, node_type='int', weight_type='float'):
     """
     loads only undirected graph, if multiple instances of the same edge is detected,
     their weights are summed up
@@ -90,8 +90,6 @@ def load_adjlist(fn, node_type='string', weight_type='float'):
     for line in open(fn, 'r'):
         fields = line.split()
 
-        import pdb
-        pdb.set_trace()
         n = py_node_type(fields[0])
         if not g.has_node(n):
             g.add_node(n)
@@ -104,21 +102,21 @@ def load_adjlist(fn, node_type='string', weight_type='float'):
                 print("[warning] loopback edge ({}, {}) detected".format(v, n))
                 continue
 
-            if not g.exists(v):
-                g.add_vertex(v)
+            if not g.has_node(v):
+                g.add_node(v)
             
-            if g.exists(n, v):
+            if g.has_edge(n, v):
                 raise RuntimeError("Multiple edges ({}, {}) found in {}".format(n, v, fn))
 
-            if g.exists(v, n):  # check if the graph is undirected
-                assert math.fabs(w - g.edge(v, n)) < 1e-6, \
+            if g.has_edge(v, n):  # check if the graph is undirected
+                assert math.fabs(w - g.get_edge_data(v, n)['weight']) < 1e-6, \
                     "Inconsistent edge weight on ({}, {}), the graph is not undirected?" \
                     .format(v, n)
                 edgeset.remove((v, n))
             else:
                 edgeset.add((n, v))
 
-            g.inc_edge(n, v, w)
+            g.add_edge(n, v, weight=w)
     if len(edgeset) > 0:
         raise RuntimeError("One-sided edges detected".format(edgeset))
     return g

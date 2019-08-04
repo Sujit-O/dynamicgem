@@ -105,8 +105,9 @@ class DynamicGraph(Timeline, utils.Archivable):
         self.nunits = self._step2unit(self.localstep + self.nsteps - 1) - self.localunit + self.stepsize
         # we use mygraph as main data, with supportive gtgraphs available
         self._mygraphs = utils.OffsetList(self.localstep, self.nsteps, lambda step: self._load_graph(step))
-        self._gtgraphs = utils.OffsetList(self.localstep, self.nsteps,
-                                          lambda i: gconv.mygraph2graphtool(self._mygraphs[i], convert_to='undirected'))
+        self._gtgraphs = utils.OffsetList(self.localstep, self.nsteps, lambda i : self._mygraphs[i].to_undirected())
+        # import pdb
+        # pdb.set_trace()
 
     @property
     def mygraphs(self):
@@ -118,7 +119,7 @@ class DynamicGraph(Timeline, utils.Archivable):
 
     @property
     def nsize(self):
-        return self.gtgraphs['any'].num_vertices()
+        return self.gtgraphs['any'].number_of_nodes()
 
     # override this to apply acceleration techniques
     def _load_graph(self, step):
@@ -223,9 +224,9 @@ class TestSampler(object):
     def _sample_link_reconstruction(self, begin, end, size=None, negdup=1, intv=0, name=""):
         pos = []
         for i, g in enumerate(self.gtgraphs[begin + intv:end]):
-            for e in g.edges():
+            for src,tgt in list(g.edges()):
                 assert not g.is_directed()
-                if gconf.debug and int(e.source()) > int(e.target()):
+                if gconf.debug and int(src) > int(tgt):
                     # check symmetric
                     names = g.vertex_properties['name']
                     assert g.edge(e.target(), e.source()), "{}: {} {}".format(i + begin, names[e.source()],
@@ -233,12 +234,12 @@ class TestSampler(object):
                     assert g.edge_properties['weight'][e] == g.edge_properties['weight'][
                         g.edge(e.target(), e.source())]
                     continue
-                pos.append([i + begin, int(e.source()), int(e.target())])
+                pos.append([i + begin, int(src), int(tgt)])
         pos = np.vstack(pos).astype('int32')
 
         neg = []
-        vsize = self.gtgraphs['any'].num_vertices()
-        nodenames = list(self.gtgraphs['any'].vp['name'])
+        vsize = self.gtgraphs['any'].number_of_nodes()
+        nodenames = list(self.gtgraphs['any'].nodes())
         for i in range(negdup):
             for p in pos:
                 tm, src, tgt = p
@@ -251,14 +252,14 @@ class TestSampler(object):
                         # cur_range = negrange[tm][tgt]
                         # new_src = cur_range[random.randint(0, len(cur_range) - 1)]
                         new_src = random.randint(0, vsize - 1)
-                        if not g.exists(nodenames[new_src], nodenames[tgt]):
+                        if not g.has_edge(nodenames[new_src], nodenames[tgt]):
                             neg.append([tm, new_src, tgt])
                             break
                     else:  # replace target
                         # cur_range = negrange[tm][src]
                         # new_tgt = cur_range[random.randint(0, len(cur_range) - 1)]
                         new_tgt = random.randint(0, vsize - 1)
-                        if not g.exists(nodenames[src], nodenames[new_tgt]):
+                        if not g.has_edge(nodenames[src], nodenames[new_tgt]):
                             neg.append([tm, src, new_tgt])
                             break
         neg = np.vstack(neg).astype('int32')

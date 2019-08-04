@@ -2,6 +2,7 @@ from __future__ import print_function
 from __future__ import print_function
 
 import keras.backend as K
+import tensorflow as tf
 from keras import optimizers, constraints
 import numpy as np
 import math
@@ -92,7 +93,7 @@ class Model(Sampler, TrainFlow, WithData, Validator):
         else:
             pred_tm = K.slice(pred_data, [0, 0], [-1, 1]) - 1
             node_idx = K.concatenate((pred_tm, K.slice(data, [0, 1], [-1, 1])), axis=1)
-            pred = K.expand_dims(K.gather_nd(embedding, node_idx), 1) - K.gather(embedding, K.squeeze(pred_tm, 1))
+            pred = K.expand_dims(tf.gather_nd(embedding, node_idx), 1) - K.gather(embedding, K.squeeze(pred_tm, 1))
             pred = -K.sum(K.square(pred), axis=-1)
 
             tm = K.slice(data, [0, 0], [-1, 1])
@@ -100,9 +101,9 @@ class Model(Sampler, TrainFlow, WithData, Validator):
             posedge2 = K.concatenate((tm, K.slice(data, [0, 2], [-1, 1])), axis=1)
             negedge1 = K.concatenate((tm, K.slice(data, [0, 3], [-1, 1])), axis=1)
             negedge2 = K.concatenate((tm, K.slice(data, [0, 4], [-1, 1])), axis=1)
-            dist_pos = K.gather_nd(embedding, posedge1) - K.gather_nd(embedding, posedge2)
+            dist_pos = tf.gather_nd(embedding, posedge1) - tf.gather_nd(embedding, posedge2)
             dist_pos = K.sum(dist_pos * dist_pos, axis=-1)
-            dist_neg = K.gather_nd(embedding, negedge1) - K.gather_nd(embedding, negedge2)
+            dist_neg = tf.gather_nd(embedding, negedge1) - tf.gather_nd(embedding, negedge2)
             dist_neg = K.sum(dist_neg * dist_neg, axis=-1)
 
         margin = 1
@@ -131,8 +132,8 @@ class Model(Sampler, TrainFlow, WithData, Validator):
             n1 = K.concatenate((tm, K.slice(triag_int, [0, 2], [-1, 1])), axis=1)
             n2 = K.concatenate((tm, K.slice(triag_int, [0, 3], [-1, 1])), axis=1)
             
-            e1 = K.gather_nd(embedding, nc) - K.gather_nd(embedding, n1)
-            e2 = K.gather_nd(embedding, nc) - K.gather_nd(embedding, n2)
+            e1 = tf.gather_nd(embedding, nc) - tf.gather_nd(embedding, n1)
+            e2 = tf.gather_nd(embedding, nc) - tf.gather_nd(embedding, n2)
 
             w1 = K.slice(triag_float, [0, 1], [-1, 1])
             w2 = K.slice(triag_float, [0, 2], [-1, 1])
@@ -140,7 +141,7 @@ class Model(Sampler, TrainFlow, WithData, Validator):
             x = e1 * w1 + e2 * w2
             iprod = K.dot(x, K.expand_dims(theta[:-1], axis=1)) + theta[-1]  # (batchsize_d, )
             # logprob = K.log(1 + K.exp(-iprod))
-            logprob = -K.log_softmax(K.concatenate((iprod, K.zeros_like(iprod)), axis=1), axis=1)
+            logprob = -tf.nn.log_softmax(K.concatenate((iprod, K.zeros_like(iprod)), axis=1), axis=1)
             logprob = K.slice(logprob, [0, 0], [-1, 1])  # discard results for appended zero line
             logprob = K.clip(logprob, -50, 50)  # if the softmax if too small
 
@@ -360,14 +361,15 @@ class Model(Sampler, TrainFlow, WithData, Validator):
 
     def __emcoef_calculator_factory(self, timestep):
         # TODO: split data by year so that we need not share the whole emb and mygraph
-        nodenames = list(self.__dataset.gtgraphs['any'].vp['name'])
+        nodenames = list(self.__dataset.gtgraphs['any'].nodes())
         name2idx = {n: i for i, n in enumerate(nodenames)}
         emb, theta = [K.get_value(v) for v in self.pretrain['vars']]
         # localstep = self.__dataset.localstep
 
         # localize for current time step
         g = self.__dataset.mygraphs[timestep]
-        emb = emb[timestep - self.__dataset.localstep]
+        # print(timestep, self.__dataset.localstep)
+        emb = emb[int(timestep - self.__dataset.localstep)]
         # mygraphs = list(self.__dataset.mygraphs)
 
         def emcoef_calc(procinfo, data, reportq):
@@ -383,7 +385,7 @@ class Model(Sampler, TrainFlow, WithData, Validator):
                     C = 1
                 else:
                     def x(a, b, c):
-                        w1, w2 = g.edge(nodenames[a], nodenames[c]), g.edge(nodenames[b], nodenames[c])
+                        w1, w2 = g.get_edge_data(a,c)['weight'], g.get_edge_data(b, c)['weight']
                         return (emb[c] - emb[a]) * w1 + (emb[c] - emb[b]) * w2
 
                     def P(a, b, c):
@@ -396,20 +398,20 @@ class Model(Sampler, TrainFlow, WithData, Validator):
 
                     C0 = P(i, j, k)
 
-                    inbr = set(list(g.out_neighbours(nodenames[i])))
-                    jnbr = set(list(g.out_neighbours(nodenames[j])))
+                    inbr = set(list(g.neighbors(i)))
+                    jnbr = set(list(g.neighbors(j)))
                     cmnbr = inbr.intersection(jnbr)
-                    C1 = 1 - np.prod([1 - P(i, j, name2idx[v]) for v in cmnbr])
+                    C1 = 1 - np.prod([1 - P(i, j, v) for v in cmnbr])
 
                     eps = 1e-6
                     C = 1 - C0 / (C1 + eps)
 
                     if not np.isfinite(C):
-                        print(C0, C1, C, [1 - P(i, j, name2idx[v]) for v in cmnbr])
+                        print(C0, C1, C, [1 - P(i, j, v) for v in cmnbr])
                         print(i, j, k)
-                        print(g.exists(nodenames[i], nodenames[k]),
-                              g.exists(nodenames[j], nodenames[k]))
-                        print([name2idx[n] for n in inbr], [name2idx[n] for n in jnbr])
+                        print(g.has_edge(i, k),
+                              g.has_edge(j, k))
+                        print([n for n in inbr], [n for n in jnbr])
                         assert 0
 
                 ret.append(([y, k, i, j], [C, wtv1, wtv2]))

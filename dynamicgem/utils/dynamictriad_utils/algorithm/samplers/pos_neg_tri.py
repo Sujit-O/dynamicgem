@@ -148,10 +148,10 @@ class Sampler(pos_neg.Sampler, WithData):
         # localstep as an argument
         mygraphs = list(self.dataset.mygraphs)
 
-        nodenames = list(self.dataset.gtgraphs['any'].vp['name'])
+        nodenames = list(self.dataset.gtgraphs['any'].nodes())
         # the order defined by vp should be the same as mygraphs.vertices(),
         # which is also the storing order of the embedding
-        for v1, v2 in zip(nodenames, self.dataset.mygraphs['any'].vertices()):
+        for v1, v2 in zip(nodenames, list(self.dataset.mygraphs['any'].nodes())):
             assert v1 == v2, (v1, v2, type(v1), type(v2))
 
         name2idx = {n: i for i, n in enumerate(nodenames)}
@@ -186,64 +186,78 @@ class Sampler(pos_neg.Sampler, WithData):
         myg = mygraphs[k - localstep]
         mynextg = mygraphs[k + 1 - localstep]
 
+        # assert not myg.is_directed(), "myg is directed!"
         if utils.crandint(2) == 0:  # target as key point
             trycnt = 0
             # new_src = random.randint(0, self.dataset.graphs[k].num_vertices() - 1)
-            nbr = myg.out_neighbours(nodenames[tgt])
-            new_src = name2idx[nbr[utils.crandint(len(nbr))]]
+            nbr = list(myg.neighbors(tgt))
+            new_src = nbr[utils.crandint(len(nbr))]
             # while self._edge(k, tgt, new_src) is None or self._edge(k, src, new_src) is not None:
-            while new_src == tgt or new_src == src or not myg.exists(nodenames[tgt], nodenames[new_src]) or \
-                    myg.exists(nodenames[src], nodenames[new_src]):
+            while new_src == tgt or new_src == src or not myg.has_edge(tgt, new_src) or \
+                    myg.has_edge(src, new_src):
                 if trycnt >= 5:
                     break
                 # new_src = random.randint(0, self.dataset.graphs[k].num_vertices() - 1)
-                new_src = name2idx[nbr[utils.crandint(len(nbr))]]
+                new_src = nbr[utils.crandint(len(nbr))]
                 trycnt += 1
             if trycnt >= 5:
                 # nbr = [int(v) for v in self.dataset.gtgraphs[k].vertex(tgt).out_neighbours()
                 #       if int(v) != src and int(v) != tgt and not myg.exists(nodenames[int(v)], nodenames[src])]
                 #       if int(v) != src and self._edge(k, v, src) is None]
-                cand = [name2idx[n] for n in nbr]
+                cand = nbr
                 cand = [n for n in cand if n != src and n != tgt and
-                        not myg.exists(nodenames[n], nodenames[src])]
+                        not myg.has_edge(n, src)]
                 if len(cand) <= 0:
                     return None, trycnt
                 # new_src = nbr[random.randint(0, len(nbr) - 1)]
                 new_src = cand[utils.crandint(len(cand))]
             # triagdata.append([k, tgt, src, new_src, self._edge(k + 1, src, new_src) is not None,
             #                  w[self._edge(k, tgt, src)], w[self._edge(k, tgt, new_src)]])
-            ret = [k, tgt, src, new_src, mynextg.exists(nodenames[src], nodenames[new_src]),
-                   myg.edge(nodenames[tgt], nodenames[src]),
-                   myg.edge(nodenames[tgt], nodenames[new_src])]
+
+
+            assert myg.has_edge(tgt, src), ("no edge in myg for tgt, src:", tgt, src)
+            assert myg.has_edge(tgt, new_src), ("no edge in myg for tgt, new_src, tgt_neighbors:", tgt, new_src,list(myg.neighbors(tgt)))
+
+            ret = [k, tgt, src, new_src, mynextg.has_edge(src, new_src),
+                   myg.get_edge_data(tgt, src)['weight'],
+                   myg.get_edge_data(tgt, new_src)['weight']]
         else:  # src as key point
             trycnt = 0
-            nbr = myg.out_neighbours(nodenames[src])
+            nbr = list(myg.neighbors(src))
             # new_tgt = random.randint(0, self.dataset.graphs[k].num_vertices() - 1)
-            new_tgt = name2idx[nbr[utils.crandint(len(nbr))]]
+            new_tgt = nbr[utils.crandint(len(nbr))]
             # while self._edge(k, src, new_tgt) is None or self._edge(k, tgt, new_tgt) is not None:
-            while new_tgt == src or new_tgt == tgt or not myg.exists(nodenames[src], nodenames[new_tgt]) or \
-                    myg.exists(nodenames[tgt], nodenames[new_tgt]):
+            while new_tgt == src or new_tgt == tgt or not myg.has_edge(src, new_tgt) or \
+                    myg.has_edge(tgt, new_tgt):
                 if trycnt >= 5:
                     break
                 # new_tgt = random.randint(0, self.dataset.graphs[k].num_vertices() - 1)
-                new_tgt = name2idx[nbr[utils.crandint(len(nbr))]]
+                new_tgt = nbr[utils.crandint(len(nbr))]
                 trycnt += 1
             if trycnt >= 5:
                 # nbr = [int(v) for v in self.dataset.gtgraphs[k].vertex(src).out_neighbours()
                 #       if int(v) != tgt and int(v) != src and not myg.exists(nodenames[int(v)], nodenames[tgt])]
                 #       if int(v) != tgt and self._edge(k, v, tgt) is None]
-                cand = [name2idx[n] for n in nbr]
+                cand = nbr
                 cand = [n for n in cand if n != tgt and n != src and
-                        not myg.exists(nodenames[n], nodenames[tgt])]
+                        not myg.has_edge(n, tgt)]
                 if len(cand) <= 0:
                     return None, trycnt
                 # new_tgt = nbr[random.randint(0, len(nbr) - 1)]
                 new_tgt = cand[utils.crandint(len(cand))]
+
             # triagdata.append([k, src, tgt, new_tgt, self._edge(k + 1, tgt, new_tgt) is not None,
             #                  w[self._edge(k, src, tgt)], w[self._edge(k, src, new_tgt)]])
-            ret = [k, src, tgt, new_tgt, mynextg.exists(nodenames[tgt], nodenames[new_tgt]),
-                   myg.edge(nodenames[src], nodenames[tgt]),
-                   myg.edge(nodenames[src], nodenames[new_tgt])]
+            # try:
+            #     w =  myg.get_edge_data(src, new_tgt)['weight']
+            # except:
+            #     w = 
+            assert myg.has_edge(src,tgt), ("no edge in myg for src, tgt:", src,tgt)
+            assert myg.has_edge(src, new_tgt), ("no edge in myg for src, new_tgt, src_neighbors:", src,new_tgt,list(myg.neighbors(src)))
+
+            ret = [k, src, tgt, new_tgt, mynextg.has_edge(tgt, new_tgt),
+                   myg.get_edge_data(src, tgt)['weight'],
+                  myg.get_edge_data(src, new_tgt)['weight']]
 
         assert len(set(ret[1:4])) == 3 and ret[5] > 0 and ret[5] > 0, ret
         return ret, trycnt
