@@ -16,6 +16,8 @@ dynamicgem/dataset
 # Python egg metadata, regenerated from source files by setuptools.
 /*.egg-info
 /*.egg
+/*.eggs
+*.DS_Store
 *.pdf
 *.txt
 *.csv
