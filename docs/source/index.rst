@@ -4,7 +4,7 @@ Welcome to dynamicgem documentation!
 
 **dynamicgem** is an open-source Python library for learning node representations of dynamic graphs. It consists of state-of-the-art algorithms for defining embeddings of nodes whose connections evolve over time. We have implemented various metrics to evaluate the state-of-the-art methods, and examples of evolving networks from various domains. We have easy-to-use functions to call and evaluate the methods and have extensive usage documentation. 
 
-See the source code repository on github: https://github.com/Sujit-O/dynamicgem
+Checkout the  `Github Repository`_. 
 
 .. toctree::
    :maxdepth: 2
@@ -50,3 +50,6 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+
+.. _Github Repository: https://github.com/Sujit-O/dynamicgem
