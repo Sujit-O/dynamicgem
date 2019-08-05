@@ -1,6 +1,6 @@
 try: import cPickle as pickle
 except: import pickle
-from .metrics import *
+from dynamicgem.evaluation import metrics 
 from dynamicgem.utils import evaluation_util, graph_util
 import networkx as nx
 import numpy as np
