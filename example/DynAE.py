@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 disp_avlbl = True
 import os
 if os.name == 'posix' and 'DISPLAY' not in os.environ:
