@@ -1,18 +1,25 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+This module is for testing TIMERS
+"""
 import os
 from dynamicgem.utils import dataprep_util
 from dynamicgem.embedding.TIMERS import TIMERS
 from dynamicgem.graph_generation import dynamic_SBM_graph as sbm
+from dynamicgem.evaluation import visualize_embedding as viz
+from dynamicgem.evaluation import evaluate_link_prediction as lp
 from time import time
 
 
-def main():
+def test_TIMERS():
     # Parameters for Stochastic block model graph
     # Todal of 1000 nodes
-    node_num = 1000
+    node_num = 100
     # Test with two communities
     community_num = 2
     # At each iteration migrate 10 nodes from one community to the another
-    node_change_num = 10
+    node_change_num = 2
     # Length of total time steps the graph will dynamically change
     length = 7
     # output directory for result
@@ -33,7 +40,6 @@ def main():
     # parameters for the dynamic embedding
     # dimension of the embedding
     dim_emb = 8
-    lookback = 2
 
     # TIMERS
     datafile = dataprep_util.prep_input_TIMERS(graphs, length, testDataType)
@@ -60,8 +66,14 @@ def main():
     embedding.learn_embedding()
     embedding.get_embedding(outdir_tmp, 'optimalSVD')
     print(embedding._method_name + ':\n\tTraining time: %f' % (time() - t1))
-    embedding.plotresults(dynamic_sbm_series)
+    lp.expstaticLP_TIMERS(dynamic_sbm_series,
+                                  graphs,
+                                  embedding,
+                                  1,
+                                  outdir + '/',
+                                  'nm' + str(node_change_num) + '_l' + str(length) + '_emb' + str(int(dim_emb)),
+                                  )
 
 
 if __name__ == '__main__':
-    main()
+    test_TIMERS()

@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+This module is for testing dynRNN
+"""
+
 import os
 import matplotlib.pyplot as plt
 from dynamicgem.embedding.dynRNN import DynRNN
@@ -6,14 +12,14 @@ from dynamicgem.visualization import plot_dynamic_sbm_embedding
 from time import time
 
 
-def main():
+def test_dynRNN():
     # Parameters for Stochastic block model graph
     # Todal of 1000 nodes
-    node_num = 1000
+    node_num = 100
     # Test with two communities
     community_num = 2
     # At each iteration migrate 10 nodes from one community to the another
-    node_change_num = 10
+    node_change_num = 2
     # Length of total time steps the graph will dynamically change
     length = 7
     # output directory for result
