@@ -23,6 +23,7 @@ from dynamicgem.visualization import plot_dynamic_sbm_embedding
 from dynamicgem.graph_generation import dynamic_SBM_graph
 
 
+
 class GraphFactorization(DynamicGraphEmbedding):
 
     def __init__(self, d, n_iter, n_iter_sub, eta, regu, kappa, initEmbed=None):
