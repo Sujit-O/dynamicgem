@@ -8,4 +8,4 @@ More recently, much attention has been devoted to extending static embedding tec
 
 In this library, we present an easy-to-use toolkit of state-of-the-art dynamic graph embedding  methods.  **dynamicgem** implements methods which can handle the evolution of networks over time. Further, we provide a comprehensive framework to evaluate the methods by providing support for four tasks on dynamic networks: graph reconstruction, static and temporal link prediction, node classification, and temporal visualization. For each task, our framework includes multiple evaluation metrics to quantify the performance of the methods. We further share synthetic and real networks for evaluation. Thus, our library is an end-to-end framework to experiment with dynamic graph embedding. 
 
-Please find the full documentation of the **dynamicgem** library [here]().
+Please find the full documentation of the **dynamicgem** library [here](https://dynamicgem.readthedocs.io).
