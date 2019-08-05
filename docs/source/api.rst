@@ -6,55 +6,55 @@ AE Static
 ----------
 
 .. automodule:: dynamicgem.embedding.ae_static
-   :members:
+   :members: AE
 
 Dynamice AE (dyngraph2vecAE)
 ----------------------------
 
 .. automodule:: dynamicgem.embedding.dynAE
-   :members:
+   :members: DynAE
 
 Dynamic AE with RNN (dyngraph2vecAERNN)
 ---------------------------------------
 
 .. automodule:: dynamicgem.embedding.dynAERNN
-   :members:
+   :members: DynAERNN
 
 Dynamic TRIAD
 --------------
 
 .. automodule:: dynamicgem.embedding.dynamicTriad
-   :members:
+   :members: dynamicTriad
 
 Dynamic GEM (dynGEM)
 ---------------------
 
 .. automodule:: dynamicgem.embedding.dynGEM
-   :members:
+   :members: DynGEM
 
 Dynamic RNN (dyngraph2vecRNN)
 -----------------------------
 
 .. automodule:: dynamicgem.embedding.dynRNN
-   :members:
+   :members: DynRNN
 
 Dynamic Graph Factorization
 ---------------------------
 
 .. automodule:: dynamicgem.embedding.graphFac_dynamic
-   :members:
+   :members: GraphFactorization
 
 Dynamic SDNE
 -------------
 
 .. automodule:: dynamicgem.embedding.sdne_dynamic
-   :members:
+   :members: SDNE
 
 TIMERS
 -------
 
 .. automodule:: dynamicgem.embedding.TIMERS
-   :members:
+   :members: TIMERS
 
 Evaluation Functions
 =====================
