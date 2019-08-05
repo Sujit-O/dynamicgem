@@ -7,17 +7,18 @@ import os
 from dynamicgem.utils import dataprep_util
 from dynamicgem.embedding.TIMERS import TIMERS
 from dynamicgem.graph_generation import dynamic_SBM_graph as sbm
+from dynamicgem.evaluation import visualize_embedding as viz
 from time import time
 
 
 def test_TIMERS():
     # Parameters for Stochastic block model graph
     # Todal of 1000 nodes
-    node_num = 1000
+    node_num = 100
     # Test with two communities
     community_num = 2
     # At each iteration migrate 10 nodes from one community to the another
-    node_change_num = 10
+    node_change_num = 2
     # Length of total time steps the graph will dynamically change
     length = 7
     # output directory for result

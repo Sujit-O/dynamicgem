@@ -13,11 +13,11 @@ from time import time
 def test_ae_static():
     # Parameters for Stochastic block model graph
     # Todal of 1000 nodes
-    node_num = 1000
+    node_num = 100
     # Test with two communities
     community_num = 2
     # At each iteration migrate 10 nodes from one community to the another
-    node_change_num = 10
+    node_change_num = 2
     # Length of total time steps the graph will dynamically change
     length = 7
     # output directory for result
@@ -47,7 +47,7 @@ def test_ae_static():
                    nu2=1e-6,
                    K=3,
                    n_units=[500, 300],
-                   n_iter=5,
+                   n_iter=2,
                    xeta=1e-4,
                    n_batch=100,
                    modelfile=['./intermediate/enc_modelsbm.json',
