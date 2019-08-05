@@ -1,4 +1,3 @@
-disp_avlbl = True
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
@@ -6,6 +5,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+disp_avlbl = True
 if os.name == 'posix' and 'DISPLAY' not in os.environ:
     disp_avlbl = False
     import matplotlib
@@ -40,7 +40,7 @@ if __name__ == '__main__':
                         type=bool,
                         help='Take highest centrality measure to perform node migration')
     parser.add_argument('-l', '--timelength',
-                        default=10,
+                        default=4,
                         type=int,
                         help='Number of time series graph to generate')
     parser.add_argument('-lb', '--lookback',
@@ -48,15 +48,15 @@ if __name__ == '__main__':
                         type=int,
                         help='number of lookbacks')
     parser.add_argument('-nm', '--nodemigration',
-                        default=10,
+                        default=2,
                         type=int,
                         help='number of nodes to migrate')
     parser.add_argument('-iter', '--epochs',
-                        default=250,
+                        default=2,
                         type=int,
                         help='number of epochs')
     parser.add_argument('-emb', '--embeddimension',
-                        default=128,
+                        default=16,
                         type=int,
                         help='embedding dimension')
     parser.add_argument('-rd', '--resultdir',
@@ -64,7 +64,7 @@ if __name__ == '__main__':
                         default='./results_link_all',
                         help="result directory name")
     parser.add_argument('-sm', '--samples',
-                        default=5000,
+                        default=5,
                         type=int,
                         help='samples for test data')
     parser.add_argument('-eta', '--learningrate',
@@ -72,7 +72,7 @@ if __name__ == '__main__':
                         type=float,
                         help='learning rate')
     parser.add_argument('-bs', '--batch',
-                        default=100,
+                        default=10,
                         type=int,
                         help='batch size')
     parser.add_argument('-ht', '--hypertest',
@@ -96,7 +96,7 @@ if __name__ == '__main__':
 
     if not os.path.exists('./intermediate'):
           os.mkdir('./intermediate')
-          
+
     if length < 7:
         length = 7
     lookback = args.lookback
@@ -126,7 +126,7 @@ if __name__ == '__main__':
         plt.savefig('result/visualization_DynRNN_rp.png')
         plt.show()
     elif args.testDataType == 'sbm_cd':
-        node_num = 1000
+        node_num = 100
         community_num = 2
         node_change_num = args.nodemigration
         dynamic_sbm_series = dynamic_SBM_graph.get_community_diminish_series_v2(node_num,

@@ -1,4 +1,3 @@
-disp_avlbl = True
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
@@ -293,7 +292,7 @@ class DynAERNN(DynamicGraphEmbedding):
             return (S_hat[i, j] + S_hat[j, i]) / 2
 
     def get_reconstructed_adj(self, embed=None, node_l=None, filesuffix=None):
-         """Function to reconstruct the adjacency list for the given node.
+        """Function to reconstruct the adjacency list for the given node.
            
             Attributes:
               node_l (int): node for which the adjacency list will be created.
