@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
@@ -40,7 +39,7 @@ class DynAE(DynamicGraphEmbedding):
         weightfile (str): Files containing previous encoder and decoder weights
     
     Examples:
-        >>> from dynamicgem.embedding.ae_static import DynAE
+        >>> from dynamicgem.embedding.dynAE import DynAE
         >>> from dynamicgem.graph_generation import dynamic_SBM_graph
         >>> node_num = 1000
         >>> community_num = 2

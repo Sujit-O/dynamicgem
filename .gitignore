@@ -24,6 +24,8 @@ dynamicgem/dataset
 *.DS_Store
 *.pdf
 *.txt
+*.json
+*.hdf5
 *.csv
 .vscode/settings.json
 dynamicgem/test/.coverage*
