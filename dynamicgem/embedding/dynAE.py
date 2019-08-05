@@ -7,16 +7,7 @@ if os.name == 'posix' and 'DISPLAY' not in os.environ:
     matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import sys
-import os
-
-sys.path.append('./')
-
 from joblib import Parallel, delayed
-from .dynamic_graph_embedding import DynamicGraphEmbedding
-from dynamicgem.utils import plot_util, graph_util, dataprep_util
-from dynamicgem.visualization import plot_dynamic_sbm_embedding
-from dynamicgem.graph_generation import dynamic_SBM_graph
-from dynamicgem.evaluation import evaluate_link_prediction, evaluate_graph_reconstruction
 
 from keras.layers import Input, Dense, Lambda, merge, Subtract
 from keras.models import Model, model_from_json
@@ -25,14 +16,43 @@ from keras.optimizers import SGD, Adam
 from keras.callbacks import TensorBoard
 from keras import callbacks
 from keras import backend as KBack
-from .dnn_utils import *
 import tensorflow as tf
 from argparse import ArgumentParser
 from time import time
 import operator
 
+from dynamicgem.embedding.dynamic_graph_embedding import DynamicGraphEmbedding
+from dynamicgem.utils import plot_util, graph_util, dataprep_util
+from dynamicgem.visualization import plot_dynamic_sbm_embedding
+from dynamicgem.graph_generation import dynamic_SBM_graph
+from dynamicgem.evaluation import evaluate_link_prediction, evaluate_graph_reconstruction
+from dynamicgem.utils.dnn_utils import *
 
 class DynAE(DynamicGraphEmbedding):
+    """`Convolutional 2D Knowledge Graph Embeddings`_
+    
+    ConvE is a multi-layer convolutional network model for link prediction,
+    it is a embedding model which is highly parameter efficient.
+    
+    Args:
+        config (object): Model configuration parameters.
+    
+    Attributes:
+        config (object): Model configuration.
+        data_stats (object): ModelMeta object instance. It consists of the knowledge graph metadata.
+        model (str): Name of the model.
+        last_dim (int): The size of the last dimesion, depends on hidden size.
+    
+    Examples:
+        >>> from pykg2vec.core.Complex import ConvE
+        >>> from pykg2vec.utils.trainer import Trainer
+        >>> model = ConvE()
+        >>> trainer = Trainer(model=model, debug=False)
+        >>> trainer.build_model()
+        >>> trainer.train_model()
+    .. _Convolutional 2D Knowledge Graph Embeddings:
+        https://www.aaai.org/ocs/index.php/AAAI/AAAI18/paper/download/17366/15884
+    """
 
     def __init__(self, d, *hyper_dict, **kwargs):
         """ Initialize the DynAE class
