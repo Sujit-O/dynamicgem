@@ -25,7 +25,7 @@ sys.path.insert(0, os.path.abspath('../dynamicgem'))
 # sys.path.insert(0, "/Users/sujito/Desktop/codes/dev/pykg2vec")
 # -- General configuration ---------------------------------------------------
 
-ver_file = os.path.join('../dynamicgem', '_version.py')
+ver_file = os.path.join('../dynamicgem/dynamicgem', '_version.py')
 
 with open(ver_file) as f:
     exec(f.read())
