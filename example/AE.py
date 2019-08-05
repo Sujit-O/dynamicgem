@@ -14,6 +14,7 @@ from joblib import Parallel, delayed
 import operator
 from time import time
 
+from dynamicgem.embedding.ae_static import AE
 from dynamicgem.utils import graph_util, dataprep_util
 from dynamicgem.evaluation import visualize_embedding as viz
 from dynamicgem.utils.sdne_utils import *
@@ -34,19 +35,19 @@ if __name__ == '__main__':
                         type=int,
                         help='Number of time series graph to generate')
     parser.add_argument('-nm', '--nodemigration',
-                        default=10,
+                        default=5,
                         type=int,
                         help='number of nodes to migrate')
     parser.add_argument('-iter', '--epochs',
-                        default=250,
+                        default=2,
                         type=int,
                         help='number of epochs')
     parser.add_argument('-emb', '--embeddimension',
-                        default=128,
+                        default=16,
                         type=int,
                         help='embedding dimension')
     parser.add_argument('-sm', '--samples',
-                        default=5000,
+                        default=10,
                         type=int,
                         help='samples for test data')
     parser.add_argument('-exp', '--exp',
@@ -63,8 +64,11 @@ if __name__ == '__main__':
     dim_emb = args.embeddimension
     length = args.timelength
 
+    if not os.path.exists('./intermediate'):
+          os.mkdir('./intermediate')
+          
     if args.testDataType == 'sbm_cd':
-        node_num = 1000
+        node_num = 100
         community_num = 2
         node_change_num = args.nodemigration
         dynamic_sbm_series = dynamic_SBM_graph.get_community_diminish_series_v2(node_num,
@@ -72,6 +76,7 @@ if __name__ == '__main__':
                                                                                 length,
                                                                                 1,
                                                                                 node_change_num)
+        
         embedding = AE(d=dim_emb,
                        beta=5,
                        nu1=1e-6,
@@ -81,10 +86,10 @@ if __name__ == '__main__':
                        n_iter=epochs,
                        xeta=1e-4,
                        n_batch=100,
-                       modelfile=['./intermediate/enc_modelsbm.json',
-                                  './intermediate/dec_modelsbm.json'],
-                       weightfile=['./intermediate/enc_weightssbm.hdf5',
-                                   './intermediate/dec_weightssbm.hdf5'])
+                       modelfile=['./intermediate/AE_enc_modelsbm.json',
+                                  './intermediate/AE_dec_modelsbm.json'],
+                       weightfile=['./intermediate/AE_enc_weightssbm.hdf5',
+                                   './intermediate/AE_dec_weightssbm.hdf5'])
 
         graphs = [g[0] for g in dynamic_sbm_series]
         embs = []

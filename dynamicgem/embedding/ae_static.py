@@ -10,8 +10,9 @@ from keras.optimizers import SGD, Adam
 from keras import backend as KBack
 import tensorflow as tf
 from time import time
+import networkx as nx
 
-from dynamicegem.embedding.static_graph_embedding import StaticGraphEmbedding
+from dynamicgem.embedding.static_graph_embedding import StaticGraphEmbedding
 from dynamicgem.utils import graph_util
 from dynamicgem.utils.sdne_utils import *
 
@@ -248,7 +249,7 @@ class AE(StaticGraphEmbedding):
             return (S_hat[i, j] + S_hat[j, i]) / 2
 
     def get_reconstructed_adj(self, embed=None, node_l=None, filesuffix=None):
-         """Function to reconstruct the adjacency list for the given node.
+        """Function to reconstruct the adjacency list for the given node.
            
             Attributes:
               node_l (int): node for which the adjacency list will be created.
