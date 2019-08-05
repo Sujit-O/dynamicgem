@@ -17,6 +17,5 @@ tensorflow==1.14.0
 h5py>=2.8.0
 joblib>=0.12.5
 Keras>=2.2.4
-matplotlib==3.0.1
 pandas>=0.23.4
 six>=1.11.0
