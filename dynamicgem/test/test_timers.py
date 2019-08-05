@@ -1,3 +1,8 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+This module is for testing TIMERS
+"""
 import os
 from dynamicgem.utils import dataprep_util
 from dynamicgem.embedding.TIMERS import TIMERS
@@ -5,7 +10,7 @@ from dynamicgem.graph_generation import dynamic_SBM_graph as sbm
 from time import time
 
 
-def main():
+def test_TIMERS():
     # Parameters for Stochastic block model graph
     # Todal of 1000 nodes
     node_num = 1000

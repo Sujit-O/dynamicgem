@@ -1,10 +1,16 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+This module is for testing ae_static
+"""
+
 import os
 from dynamicgem.evaluation import visualize_embedding as viz
 from dynamicgem.embedding.ae_static import AE
 from dynamicgem.graph_generation import dynamic_SBM_graph as sbm
 from time import time
 
-def main():
+def test_ae_static():
     # Parameters for Stochastic block model graph
     # Todal of 1000 nodes
     node_num = 1000

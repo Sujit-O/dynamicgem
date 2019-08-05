@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+This module is for testing dynRNN
+"""
+
 import os
 import matplotlib.pyplot as plt
 from dynamicgem.embedding.dynRNN import DynRNN
@@ -6,7 +12,7 @@ from dynamicgem.visualization import plot_dynamic_sbm_embedding
 from time import time
 
 
-def main():
+def test_dynRNN():
     # Parameters for Stochastic block model graph
     # Todal of 1000 nodes
     node_num = 1000
