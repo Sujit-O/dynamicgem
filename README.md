@@ -1,3 +1,4 @@
-[![Build Status](https://travis-ci.org/Sujit-O/dynamicgem.svg?branch=master)](https://travis-ci.org/Sujit-O/dynamicgem)
+[![Build Status](https://travis-ci.org/Sujit-O/dynamicgem.svg?branch=master)](https://travis-ci.org/Sujit-O/dynamicgem) [![Coverage Status](https://coveralls.io/repos/github/Sujit-O/dynamicgem/badge.svg?branch=master)](https://coveralls.io/github/Sujit-O/dynamicgem?branch=master) [![PyPI version](https://badge.fury.io/py/dynamicgem.svg)](https://badge.fury.io/py/dynamicgem) [![GitHub license](https://img.shields.io/github/license/Naereen/StrapDown.js.svg)](https://github.com/Naereen/StrapDown.js/blob/master/LICENSE) [![Python 3.6](https://img.shields.io/badge/python-3.6-blue.svg)](https://www.python.org/downloads/release/python-360/)
+[![Twitter](https://img.shields.io/twitter/url/https/github.com/Sujit-O/dynamicgem?style=social)](https://twitter.com/intent/tweet?text=Wow:&url=https%3A%2F%2Fgithub.com%2FSujit-O%2Fdynamicgem) 
 
 # dynamicgem: Python Library for Dynamic Graph Embedding Methods
