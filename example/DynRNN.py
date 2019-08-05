@@ -24,8 +24,6 @@ from dynamicgem.evaluation import evaluate_link_prediction
 from dynamicgem.utils.dnn_utils import *
 
 
-
-
 if __name__ == '__main__':
     parser = ArgumentParser(description='Learns node embeddings for a sequence of graph snapshots')
     parser.add_argument('-t', '--testDataType',

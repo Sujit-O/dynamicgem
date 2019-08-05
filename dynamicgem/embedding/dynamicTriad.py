@@ -1,20 +1,15 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import division
 from __future__ import print_function
-
-disp_avlbl = True
-import os
-if os.name == 'posix' and 'DISPLAY' not in os.environ:
-    disp_avlbl = False
-    import matplotlib
-    matplotlib.use('Agg')
 
 import sys
 import tensorflow as tf
-import argparse
 import operator
 import time
 import os
 import importlib
-import pdb
 import random
 
 from six.moves import cPickle
@@ -22,7 +17,6 @@ from keras import backend as KBack
 from os.path import isfile
 import matplotlib.pyplot as plt
 import networkx as nx
-
 from sklearn.linear_model import LogisticRegression
 
 try:
@@ -44,35 +38,108 @@ import dynamicgem.utils.dynamictriad_utils.algorithm.embutils as eu
 from dynamicgem.evaluation import evaluate_link_prediction as lp
 
 
-
-
 class dynamicTriad(StaticGraphEmbedding):
-    """ Initialize the embedding class
+    """ Dynamic Triad Closure based embedding
+        
+        DynamicTriad preserves both structural informa- tion 
+        and evolution patterns of a given network. The general 
+        idea of our approach is to impose triad, which is a group 
+        of three vertices and is one of the basic units of networks.
+
         Args:
-       t    : Type of data to test the code
-       nm   : number of nodes to migrate
-       iter : number of optimization iterations
-       m    : argparse.SUPPRESS
-       d    : input directory name
-       b    : batchsize for training
-       n    : number of time steps
-       K    : number of embedding dimensions
-       l    : size of of a time steps
-       s    : interval between two time steps
-       o    : output directory name
-       rd   : result directory name
-       lr   : initial learning rate
-       beta-smooth : coefficients for smooth component
-       beta-triad  : coefficients for triad component
-       negdup      : neg/pos ratio during sampling"
-       datasetmod  : help='module name for dataset loading
-       dataname    : name for the current data file
-       validation  : 'link_reconstruction'
-       te   : 'type of test, (node_classify, node_predict, link_classify, link_predict, '
-                             'changed_link_classify, changed_link_predict, all)')
-       classifier  : lr, svm
-       repeat      : number of times to repeat experiment
-       sm   : samples for test data
+            niters (int): Number of iteration to run the algorithm
+            starttime (int): start time for the graph step
+            datafile (str) : The file for the input graph
+            batchsize (int): batch size for training the algorithm
+            nsteps (int) : total number of steps in the temporal graph
+            embdim (int): embedding dimension
+            stepsize (int): step size for the graph
+            stepstride (int): stride to consider for temporal stride
+            outdir (str): The output directory to store the result
+            cachefn (str): Directory to cache the temporary data
+            lr (float): Learning rate for the algorithm
+            beta (float): coefficients for triad component
+            negdup (float): neg/pos ratio during sampling
+            datasetmod (str): module name for dataset loading
+            trainmod (str): module name for training model 
+            pretrain_size (int): size of the  graph for pre-training 
+            sampling_args (int): sampling size
+            validation (list): link_reconstruction validation data
+            datatype (str): type of network data 
+            scale (int): scaling 
+            classifier (str): type of classifier to be used
+            debug (bool): debugging flag
+            test (bool): type of test to perform
+            repeat (int): Number of times to repeat the learning
+            resultdir (str): directory to store the result
+            testDataType (str): type of test data
+            clname (str) : classifier type 
+            node_num (int): number of nodes
+        
+        Examples:
+            >>> from dynamicgem.embedding.dynamicTriad import dynamicTriad
+            >>> from dynamicgem.graph_generation import dynamic_SBM_graph
+            >>> node_num = 200
+            >>> community_num = 2
+            >>> node_change_num = 2
+            >>> length =5
+            >>> dynamic_sbm_series = dynamic_SBM_graph.get_community_diminish_series_v2(node_num,
+                                                                                    community_num,
+                                                                                    length,
+                                                                                    1,
+                                                                                    node_change_num)
+            >>> graphs = [g[0] for g in dynamic_sbm_series]
+
+            >>> datafile = dataprep_util.prep_input_dynTriad(graphs, length, args.testDataType)
+
+            >>> embedding = dynamicTriad(niters=10,
+                                     starttime=0,
+                                     datafile=datafile,
+                                     batchsize=10,
+                                     nsteps=5,
+                                     embdim=16,
+                                     stepsize=1,
+                                     stepstride=1,
+                                     outdir='./output',
+                                     cachefn='./tmp',
+                                     lr=0.001,
+                                     beta=0.1,
+                                     negdup=1,
+                                     datasetmod='dynamicgem.utils.dynamictriad_utils.dataset.adjlist',
+                                     trainmod='dynamicgem.utils.dynamictriad_utils.algorithm.dynamic_triad',
+                                     pretrain_size=4,
+                                     sampling_args={},
+                                     validation='link_reconstruction',
+                                     datatype='sbm_cd',
+                                     scale=1,
+                                     classifier='lr',
+                                     debug=False,
+                                     test='link_predict',
+                                     repeat=1,
+                                     resultdir='./results_link_all',
+                                     testDataType='sbm_cd',
+                                     clname='lr',
+                                     node_num=node_num )
+
+            >>> embedding.learn_embedding()
+            >>> embedding.get_embedding()
+            >>> outdir = args.resultdir
+            >>> if not os.path.exists(outdir):
+            >>>     os.mkdir(outdir)
+            >>> outdir = outdir + '/' + args.testDataType
+            >>> if not os.path.exists(outdir):
+            >>>     os.mkdir(outdir)
+            >>> outdir = outdir + '/' + 'dynTRIAD'
+            >>> if not os.path.exists(outdir):
+             >>>    os.mkdir(outdir)
+
+            >>> lp.expstaticLP_TRIAD(dynamic_sbm_series,
+                                 graphs,
+                                 embedding,
+                                 1,
+                                 outdir + '/',
+                                 'nm' + str(args.nodemigration) + '_l' + str(args.nsteps) + '_emb' + str(args.embdim),
+                                 )
     """
 
     def __init__(self, *hyper_dict, **kwargs):
@@ -94,6 +161,7 @@ class dynamicTriad(StaticGraphEmbedding):
         # self._clname='lr'       
 
     def __make_classifier(self):
+        """Function to initialize the classifier"""
         class_weight = 'balanced'
 
         if self._clname == 'svm':
@@ -104,14 +172,17 @@ class dynamicTriad(StaticGraphEmbedding):
             raise NotImplementedError()
 
     def load_trainmod(self, modname):
+        """Function to load the training module"""
         mod = importlib.import_module(modname)
         return getattr(mod, 'Model')
 
     def load_datamod(self, modname):
+        """Function to load the dataset module"""
         mod = importlib.import_module(modname)
         return getattr(mod, 'Dataset')
 
     def load_or_update_cache(self, ds, cachefn):
+        """Function to either update or load the cache"""
         if cachefn is None:
             return
         cachefn += '.cache'
@@ -132,7 +203,7 @@ class dynamicTriad(StaticGraphEmbedding):
         print("cache file {} updated".format(cachefn))
 
     def export(self, vertices, data, outdir):
-
+        """function to export the data"""
         if not os.path.exists(outdir):
             os.mkdir(outdir)
         outdir = outdir + '/' + self._datatype
@@ -150,6 +221,7 @@ class dynamicTriad(StaticGraphEmbedding):
             fh.close()
 
     def load_embedding(self, fn, vs):
+        """Function to load the embedding"""
         data = open(fn, 'r').read().rstrip('\n').split('\n')
         emb = {}
         for line in data:
@@ -162,13 +234,27 @@ class dynamicTriad(StaticGraphEmbedding):
         return np.vstack(emb)
 
     def get_method_name(self):
+        """Function to return the method name.
+            
+           Returns:
+                String: Name of the method.
+        """
         return self._method_name
 
     def get_method_summary(self):
+        """Function to return the summary of the algorithm. 
+           
+           Returns:
+                String: Method summary
+        """
         return '%s_%d' % (self._method_name)
 
     def learn_embedding(self):
-
+        """Learns the embedding of the nodes.
+           
+            Returns:
+                List: Node embeddings and time taken by the algorithm
+        """
         # TensorFlow wizardry
         config = tf.ConfigProto()
 
@@ -249,16 +335,6 @@ class dynamicTriad(StaticGraphEmbedding):
                     # maxmodel is not saved here in order to save time
                     print("")
 
-                # checkpoint disabled
-                # if i % 5 == 0:
-                #     lastmodel = tm.save_model()
-                #     if args.validation == 'none':
-                #         maxmodel = lastmodel
-                #
-                #     tm.restore_model(maxmodel)  # restore parameters while preserving other info
-                #     cPickle.dump([tm.archive(), dsargs, lastmodel], open(self._outdir, 'w'))
-                #     tm.restore_model(lastmodel)
-
                 if self._validation != 'none':
                     scores.append(val_score)
                     if max_val > 0 and i - max_idx > 5:
@@ -278,24 +354,40 @@ class dynamicTriad(StaticGraphEmbedding):
             raise NotImplementedError()
 
     def get_embedding(self):
+        """Function to return the embeddings"""
         self._X = dataprep_util.getemb_dynTriad(self._outdir + '/' + self._testDataType + '/dynTriad', self._nsteps,
                                                 self._embdim)
         return self._X
 
     def get_edge_weight(self, t, i, j):
+        """Function to get edge weight.
+           
+            Attributes:
+              i (int): source node for the edge.
+              j (int): target node for the edge.
+              embed (Matrix): Embedding values of all the nodes.
+              filesuffix (str): File suffix to be used to load the embedding.
+
+            Returns:
+                Float: Weight of the given edge.
+        """
         try:
             feat = np.fabs(self._X[t][i, :] - self._X[t][j, :])
-            # val= 1/(1+np.mean(np.fabs(self._X[t][i,:]- self._X[t][j,:])))
-            # val= 1/(1+np.linalg.norm(self._X[t][i,:]- self._X[t][j,:]))
-            # print(val)
-            # pdb.set_trace()
-            # return self._model.predict_proba(np.reshape(feat,[1,-1]))[0][1]
             return self._model.predict(np.reshape(feat, [1, -1]))[0]
-            # return val
         except:
             pdb.set_trace()
 
     def get_reconstructed_adj(self, t, X=None, node_l=None):
+        """Function to reconstruct the adjacency list for the given node.
+           
+            Attributes:
+              node_l (int): node for which the adjacency list will be created.
+              X (Matrix): Embedding values of all the nodes.
+              t (int): Time step
+
+            Returns:
+                List : Adjacency list of the given node.
+        """
         if X is not None:
             node_num = X.shape[0]
             # self._X = X
@@ -310,6 +402,7 @@ class dynamicTriad(StaticGraphEmbedding):
         return adj_mtx_r
 
     def sample_link_reconstruction(self, g, sample_nodes=None, negdup=1):
+        """Function to sample the link reconstruction"""
         pos = []
         # assert not g.is_directed()
         # for g in graphs:
@@ -354,6 +447,7 @@ class dynamicTriad(StaticGraphEmbedding):
         return np.concatenate((pos, neg), axis=0), lbs
 
     class ResultPresenter(object):
+        """result presenter class"""
         def __init__(self):
             self.f1, self.prec, self.rec, self.acc = [], [], [], []
 
@@ -405,6 +499,7 @@ class dynamicTriad(StaticGraphEmbedding):
         return prec, rec, f1, acc
 
     def link_predict(self, g, t, intv=0, repeat=1):
+        """Function to perform link prediction"""
         samp, lbs = self.sample_link_reconstruction(g, sample_nodes=None, negdup=1)
         # pdb.set_trace()
         # TODO: different feature generation method might be used here
@@ -425,521 +520,21 @@ class dynamicTriad(StaticGraphEmbedding):
         self._model = self.clf.fit(x, y)
 
     def predict_next_adj(self, t, node_l=None):
+        """Function to predict the next adjacency for the given node.
+           
+            Attributes:
+              node_l (int): node for which the adjacency list will be created.
+
+            Returns:
+                List: Reconstructed adjancey list.
+        """
         if node_l is not None:
             return self.get_reconstructed_adj(t, node_l)
         else:
             return self.get_reconstructed_adj(t)
 
     def plotresults(self, dynamic_sbm_series):
+        """Function to plot the result"""
         plt.figure()
         plt.clf()
         viz.plot_static_sbm_embedding(self._X[-4:], dynamic_sbm_series[-4:])
-
-
-if __name__ == '__main__':
-
-    parser = argparse.ArgumentParser(description='Learns static node embeddings')
-    parser.add_argument('-t', '--testDataType',
-                        default='sbm_cd',
-                        type=str,
-                        help='Type of data to test the code')
-    parser.add_argument('-nm', '--nodemigration',
-                        default=2,
-                        type=int,
-                        help='number of nodes to migrate')
-    parser.add_argument('-iter', '--niters',
-                        type=int,
-                        help="number of optimization iterations",
-                        default=2)
-    parser.add_argument('-m', '--starttime',
-                        type=str,
-                        help=argparse.SUPPRESS,
-                        default=0)
-    parser.add_argument('-d', '--datafile',
-                        type=str,
-                        help='input directory name')
-    parser.add_argument('-b', '--batchsize',
-                        type=int,
-                        help="batchsize for training",
-                        default=100)
-    parser.add_argument('-n', '--nsteps',
-                        type=int,
-                        help="number of time steps",
-                        default=4)
-    parser.add_argument('-K', '--embdim',
-                        type=int,
-                        help="number of embedding dimensions",
-                        default=32)
-    parser.add_argument('-l', '--stepsize',
-                        type=int,
-                        help="size of of a time steps",
-                        default=1)
-    parser.add_argument('-s', '--stepstride',
-                        type=int,
-                        help="interval between two time steps",
-                        default=1)
-    parser.add_argument('-o', '--outdir',
-                        type=str,
-                        default='./output',
-                        help="output directory name")
-    parser.add_argument('-rd', '--resultdir',
-                        type=str,
-                        default='./results_link_all',
-                        help="result directory name")
-    parser.add_argument('--lr',
-                        type=float,
-                        help="initial learning rate",
-                        default=0.1)
-    parser.add_argument('--beta-smooth',
-                        type=float,
-                        default=0.1,
-                        help="coefficients for smooth component")
-    parser.add_argument('--beta-triad',
-                        type=float,
-                        default=0.1,
-                        help="coefficients for triad component")
-    parser.add_argument('--negdup',
-                        type=int,
-                        help="neg/pos ratio during sampling",
-                        default=1)
-    parser.add_argument('--datasetmod',
-                        type=str,
-                        default='dynamicgem.utils.dynamictriad_utils.dataset.adjlist',
-                        help='module name for dataset loading',
-                        )
-    parser.add_argument('--validation',
-                        type=str,
-                        default='link_reconstruction',
-                        help=', '.join(list(sorted(set(du.TestSampler.tasks) & set(eu.Validator.tasks)))))
-    parser.add_argument('-te', '--test',
-                        type=str,
-                        nargs='+',
-                        default='link_predict',
-                        help='type of test, (node_classify, node_predict, link_classify, link_predict, '
-                             'changed_link_classify, changed_link_predict, all)')
-    parser.add_argument('--classifier',
-                        type=str,
-                        default='lr',
-                        help='lr, svm')
-    parser.add_argument('--repeat',
-                        type=int,
-                        default=1,
-                        help='number of times to repeat experiment')
-    parser.add_argument('-sm', '--samples',
-                        default=5000,
-                        type=int,
-                        help='samples for test data')
-    args = parser.parse_args()
-    if not os.path.exists(args.outdir):
-        os.mkdir(args.outdir)
-    args.embdir = args.outdir + '/dynTriad/' + args.testDataType
-    args.cachefn = '/tmp/' + args.testDataType
-    args.beta = [args.beta_smooth, args.beta_triad]
-    # some fixed arguments in published code
-    args.pretrain_size = args.nsteps
-    args.trainmod = 'dynamicgem.utils.dynamictriad_utils.algorithm.dynamic_triad'
-    args.sampling_args = {}
-    args.debug = False
-    args.scale = 1
-
-    if args.validation not in du.TestSampler.tasks:
-        raise NotImplementedError("Validation task {} not supported in TestSampler".format(args.validation))
-    if args.validation not in eu.Validator.tasks:
-        raise NotImplementedError("Validation task {} not supported in Validator".format(args.validation))
-
-    print("running with options: ", args.__dict__)
-
-    epochs = args.niters
-    length = args.nsteps
-
-    if args.testDataType == 'sbm_cd':
-        node_num = 200
-        community_num = 2
-        node_change_num = args.nodemigration
-        dynamic_sbm_series = dynamic_SBM_graph.get_community_diminish_series_v2(node_num,
-                                                                                community_num,
-                                                                                length,
-                                                                                1,
-                                                                                node_change_num)
-        graphs = [g[0] for g in dynamic_sbm_series]
-
-        datafile = dataprep_util.prep_input_dynTriad(graphs, length, args.testDataType)
-
-        embedding = dynamicTriad(niters=args.niters,
-                                 starttime=args.starttime,
-                                 datafile=datafile,
-                                 batchsize=args.batchsize,
-                                 nsteps=args.nsteps,
-                                 embdim=args.embdim,
-                                 stepsize=args.stepsize,
-                                 stepstride=args.stepstride,
-                                 outdir=args.outdir,
-                                 cachefn=args.cachefn,
-                                 lr=args.lr,
-                                 beta=args.beta,
-                                 negdup=args.negdup,
-                                 datasetmod=args.datasetmod,
-                                 trainmod=args.trainmod,
-                                 pretrain_size=args.pretrain_size,
-                                 sampling_args=args.sampling_args,
-                                 validation=args.validation,
-                                 datatype=args.testDataType,
-                                 scale=args.scale,
-                                 classifier=args.classifier,
-                                 debug=args.debug,
-                                 test=args.test,
-                                 repeat=args.repeat,
-                                 resultdir=args.resultdir,
-                                 testDataType=args.testDataType,
-                                 clname='lr',
-                                 node_num=node_num )
-
-        embedding.learn_embedding()
-        embedding.get_embedding()
-        # embedding.plotresults(dynamic_sbm_series)
-
-        outdir = args.resultdir
-        if not os.path.exists(outdir):
-            os.mkdir(outdir)
-        outdir = outdir + '/' + args.testDataType
-        if not os.path.exists(outdir):
-            os.mkdir(outdir)
-        outdir = outdir + '/' + 'dynTRIAD'
-        if not os.path.exists(outdir):
-            os.mkdir(outdir)
-
-        lp.expstaticLP_TRIAD(dynamic_sbm_series,
-                             graphs,
-                             embedding,
-                             1,
-                             outdir + '/',
-                             'nm' + str(args.nodemigration) + '_l' + str(args.nsteps) + '_emb' + str(args.embdim),
-                             )
-
-
-    elif args.testDataType == 'academic':
-        print("datatype:", args.testDataType)
-
-        sample = args.samples
-        if not os.path.exists('./test_data/academic/pickle'):
-            os.mkdir('./test_data/academic/pickle')
-            graphs, length = dataprep_util.get_graph_academic('./test_data/academic/adjlist')
-            for i in range(length):
-                nx.write_gpickle(graphs[i], './test_data/academic/pickle/' + str(i))
-        else:
-            length = len(os.listdir('./test_data/academic/pickle'))
-            graphs = []
-            for i in range(length):
-                graphs.append(nx.read_gpickle('./test_data/academic/pickle/' + str(i)))
-
-        G_cen = nx.degree_centrality(graphs[29])  # graph 29 in academia has highest number of edges
-        G_cen = sorted(G_cen.items(), key=operator.itemgetter(1), reverse=True)
-        node_l = []
-        i = 0
-        while i < sample:
-            node_l.append(G_cen[i][0])
-            i += 1
-        # pdb.set_trace()
-        # node_l = np.random.choice(range(graphs[29].number_of_nodes()), 5000, replace=False)
-        # print(node_l)
-        for i in range(length):
-            graphs[i] = graph_util.sample_graph_nodes(graphs[i], node_l)
-        # pdb.set_trace()
-        graphs = graphs[-args.nsteps:]
-        datafile = dataprep_util.prep_input_dynTriad(graphs, args.nsteps, args.testDataType)
-
-        embedding = dynamicTriad(niters=args.niters,
-                                 starttime=args.starttime,
-                                 datafile=datafile,
-                                 batchsize=args.batchsize,
-                                 nsteps=args.nsteps,
-                                 embdim=args.embdim,
-                                 stepsize=args.stepsize,
-                                 stepstride=args.stepstride,
-                                 outdir=args.outdir,
-                                 cachefn=args.cachefn,
-                                 lr=args.lr,
-                                 beta=args.beta,
-                                 negdup=args.negdup,
-                                 datasetmod=args.datasetmod,
-                                 trainmod=args.trainmod,
-                                 pretrain_size=args.pretrain_size,
-                                 sampling_args=args.sampling_args,
-                                 validation=args.validation,
-                                 datatype=args.testDataType,
-                                 scale=args.scale,
-                                 classifier=args.classifier,
-                                 debug=args.debug,
-                                 test=args.test,
-                                 repeat=args.repeat,
-                                 resultdir=args.resultdir,
-                                 testDataType=args.testDataType,
-                                 clname='lr',
-                                 node_num=sample
-
-                                 )
-        embedding.learn_embedding()
-        embedding.get_embedding()
-
-        outdir = args.resultdir
-        if not os.path.exists(outdir):
-            os.mkdir(outdir)
-        outdir = outdir + '/' + args.testDataType
-        if not os.path.exists(outdir):
-            os.mkdir(outdir)
-
-        outdir = outdir + '/dynTriad'
-        if not os.path.exists(outdir):
-            os.mkdir(outdir)
-        lp.expstaticLP_TRIAD(None,
-                             graphs,
-                             embedding,
-                             1,
-                             outdir + '/',
-                             'l' + str(args.nsteps) + '_emb' + str(args.embdim) + '_samples' + str(sample),
-                             n_sample_nodes=sample
-                             )
-
-
-    elif args.testDataType == 'hep':
-        print("datatype:", args.testDataType)
-
-        if not os.path.exists('./test_data/hep/pickle'):
-            os.mkdir('./test_data/hep/pickle')
-            files = [file for file in os.listdir('./test_data/hep/hep-th') if '.gpickle' in file]
-            length = len(files)
-            graphs = []
-            for i in range(length):
-                G = nx.read_gpickle('./test_data/hep/hep-th/month_' + str(i + 1) + '_graph.gpickle')
-
-                graphs.append(G)
-            total_nodes = graphs[-1].number_of_nodes()
-
-            for i in range(length):
-                for j in range(total_nodes):
-                    if j not in graphs[i].nodes():
-                        graphs[i].add_node(j)
-
-            for i in range(length):
-                nx.write_gpickle(graphs[i], './test_data/hep/pickle/' + str(i))
-        else:
-            length = len(os.listdir('./test_data/hep/pickle'))
-            graphs = []
-            for i in range(length):
-                graphs.append(nx.read_gpickle('./test_data/hep/pickle/' + str(i)))
-
-        # pdb.set_trace()            
-        sample = args.samples
-        G_cen = nx.degree_centrality(graphs[-1])  # graph 29 in academia has highest number of edges
-        G_cen = sorted(G_cen.items(), key=operator.itemgetter(1), reverse=True)
-        node_l = []
-        i = 0
-        while i < sample:
-            node_l.append(G_cen[i][0])
-            i += 1
-        for i in range(length):
-            graphs[i] = graph_util.sample_graph_nodes(graphs[i], node_l)
-
-        graphs = graphs[-args.nsteps:]
-        datafile = dataprep_util.prep_input_dynTriad(graphs, args.nsteps, args.testDataType)
-
-        embedding = dynamicTriad(niters=args.niters,
-                                 starttime=args.starttime,
-                                 datafile=datafile,
-                                 batchsize=args.batchsize,
-                                 nsteps=args.nsteps,
-                                 embdim=args.embdim,
-                                 stepsize=args.stepsize,
-                                 stepstride=args.stepstride,
-                                 outdir=args.outdir,
-                                 cachefn=args.cachefn,
-                                 lr=args.lr,
-                                 beta=args.beta,
-                                 negdup=args.negdup,
-                                 datasetmod=args.datasetmod,
-                                 trainmod=args.trainmod,
-                                 pretrain_size=args.pretrain_size,
-                                 sampling_args=args.sampling_args,
-                                 validation=args.validation,
-                                 datatype=args.testDataType,
-                                 scale=args.scale,
-                                 classifier=args.classifier,
-                                 debug=args.debug,
-                                 test=args.test,
-                                 repeat=args.repeat,
-                                 resultdir=args.resultdir,
-                                 testDataType=args.testDataType,
-                                 clname='lr',
-                                 node_num=sample
-
-                                 )
-        embedding.learn_embedding()
-        embedding.get_embedding()
-
-        outdir = args.resultdir
-        if not os.path.exists(outdir):
-            os.mkdir(outdir)
-        outdir = outdir + '/' + args.testDataType
-        if not os.path.exists(outdir):
-            os.mkdir(outdir)
-
-        outdir = outdir + '/dynTriad'
-        if not os.path.exists(outdir):
-            os.mkdir(outdir)
-        lp.expstaticLP_TRIAD(None,
-                             graphs,
-                             embedding,
-                             1,
-                             outdir + '/',
-                             'l' + str(args.nsteps) + '_emb' + str(args.embdim) + '_samples' + str(sample),
-                             n_sample_nodes=sample
-                             )
-
-
-    elif args.testDataType == 'AS':
-        print("datatype:", args.testDataType)
-
-        files = [file for file in os.listdir('./test_data/AS/as-733') if '.gpickle' in file]
-        length = len(files)
-        graphs = []
-
-        for i in range(length):
-            G = nx.read_gpickle('./test_data/AS/as-733/month_' + str(i + 1) + '_graph.gpickle')
-            graphs.append(G)
-
-        sample = args.samples
-        G_cen = nx.degree_centrality(graphs[-1])  # graph 29 in academia has highest number of edges
-        G_cen = sorted(G_cen.items(), key=operator.itemgetter(1), reverse=True)
-        node_l = []
-        i = 0
-        while i < sample:
-            node_l.append(G_cen[i][0])
-            i += 1
-        for i in range(length):
-            graphs[i] = graph_util.sample_graph_nodes(graphs[i], node_l)
-
-        graphs = graphs[-args.nsteps:]
-        datafile = dataprep_util.prep_input_dynTriad(graphs, args.nsteps, args.testDataType)
-
-        embedding = dynamicTriad(niters=args.niters,
-                                 starttime=args.starttime,
-                                 datafile=datafile,
-                                 batchsize=args.batchsize,
-                                 nsteps=args.nsteps,
-                                 embdim=args.embdim,
-                                 stepsize=args.stepsize,
-                                 stepstride=args.stepstride,
-                                 outdir=args.outdir,
-                                 cachefn=args.cachefn,
-                                 lr=args.lr,
-                                 beta=args.beta,
-                                 negdup=args.negdup,
-                                 datasetmod=args.datasetmod,
-                                 trainmod=args.trainmod,
-                                 pretrain_size=args.pretrain_size,
-                                 sampling_args=args.sampling_args,
-                                 validation=args.validation,
-                                 datatype=args.testDataType,
-                                 scale=args.scale,
-                                 classifier=args.classifier,
-                                 debug=args.debug,
-                                 test=args.test,
-                                 repeat=args.repeat,
-                                 resultdir=args.resultdir,
-                                 testDataType=args.testDataType,
-                                 clname='lr',
-                                 node_num=sample
-
-                                 )
-
-        embedding.learn_embedding()
-        embedding.get_embedding()
-
-        outdir = args.resultdir
-        if not os.path.exists(outdir):
-            os.mkdir(outdir)
-        outdir = outdir + '/' + args.testDataType
-        if not os.path.exists(outdir):
-            os.mkdir(outdir)
-
-        outdir = outdir + '/dynTriad'
-        if not os.path.exists(outdir):
-            os.mkdir(outdir)
-        lp.expstaticLP_TRIAD(None,
-                             graphs,
-                             embedding,
-                             1,
-                             outdir + '/',
-                             'l' + str(args.nsteps) + '_emb' + str(args.embdim) + '_samples' + str(sample),
-                             n_sample_nodes=sample
-                             )
-
-    elif args.testDataType == 'enron':
-        print("datatype:", args.testDataType)
-
-        files = [file for file in os.listdir('./test_data/enron') if 'month' in file]
-        length = len(files)
-        graphsall = []
-
-        for i in range(length):
-            G = nx.read_gpickle('./test_data/enron/month_' + str(i + 1) + '_graph.gpickle')
-            graphsall.append(G)
-
-        sample = graphsall[0].number_of_nodes()
-        graphs = graphsall[-args.nsteps:]
-        datafile = dataprep_util.prep_input_dynTriad(graphs, args.nsteps, args.testDataType)
-        # pdb.set_trace()
-
-        embedding = dynamicTriad(niters=args.niters,
-                                 starttime=args.starttime,
-                                 datafile=datafile,
-                                 batchsize=100,
-                                 nsteps=args.nsteps,
-                                 embdim=args.embdim,
-                                 stepsize=args.stepsize,
-                                 stepstride=args.stepstride,
-                                 outdir=args.outdir,
-                                 cachefn=args.cachefn,
-                                 lr=args.lr,
-                                 beta=args.beta,
-                                 negdup=args.negdup,
-                                 datasetmod=args.datasetmod,
-                                 trainmod=args.trainmod,
-                                 pretrain_size=args.pretrain_size,
-                                 sampling_args=args.sampling_args,
-                                 validation=args.validation,
-                                 datatype=args.testDataType,
-                                 scale=args.scale,
-                                 classifier=args.classifier,
-                                 debug=args.debug,
-                                 test=args.test,
-                                 repeat=args.repeat,
-                                 resultdir=args.resultdir,
-                                 testDataType=args.testDataType,
-                                 clname='lr',
-                                 node_num=sample
-
-                                 )
-
-        embedding.learn_embedding()
-        embedding.get_embedding()
-
-        outdir = args.resultdir
-        if not os.path.exists(outdir):
-            os.mkdir(outdir)
-        outdir = outdir + '/' + args.testDataType
-        if not os.path.exists(outdir):
-            os.mkdir(outdir)
-
-        outdir = outdir + '/dynTriad'
-        if not os.path.exists(outdir):
-            os.mkdir(outdir)
-
-        lp.expstaticLP_TRIAD(None,
-                             graphs,
-                             embedding,
-                             1,
-                             outdir + '/',
-                             'l' + str(args.nsteps) + '_emb' + str(args.embdim) + '_samples' + str(sample),
-                             n_sample_nodes=sample
-                             )
