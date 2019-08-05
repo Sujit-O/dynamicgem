@@ -1,61 +1,66 @@
-disp_avlbl = True
-import os
-if os.name == 'posix' and 'DISPLAY' not in os.environ:
-    disp_avlbl = False
-    import matplotlib
-    matplotlib.use('Agg')
-import matplotlib.pyplot as plt
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
-import numpy as np
-import scipy.io as sio
-
-import sys
-sys.path.append('./')
-
-from .dynamic_graph_embedding import DynamicGraphEmbedding
-from dynamicgem.utils import graph_util, plot_util
-from dynamicgem.visualization import plot_dynamic_sbm_embedding
-from dynamicgem.graph_generation import dynamic_SBM_graph
-from .sdne_utils import *
-
-from keras.layers import Input, Dense, Lambda, merge, Subtract
+from keras.layers import Input, Lambda, Subtract
 from keras.models import Model, model_from_json
-import keras.regularizers as Reg
 from keras.optimizers import SGD, Adam
 from keras import backend as KBack
-
-from theano.printing import debugprint as dbprint, pprint
-import pdb
-from argparse import ArgumentParser
 import time
+import numpy as np
+
+from dynamicgem.embedding.dynamic_graph_embedding import DynamicGraphEmbedding
+from dynamicgem.utils import graph_util, plot_util
+from dynamicgem.visualization import plot_dynamic_sbm_embedding
+from dynamicgem.utils.sdne_utils import *
 
 MAX_CHUNK_SIZE = 50000
 
-class SDNE(DynamicGraphEmbedding):
 
+class SDNE(DynamicGraphEmbedding):
+    """Structural Deep Network Embedding
+    
+    SDNE perform the network embedding
+    while utilizing Structural Deep Network Embedding (SDNE).
+
+    Args:
+        d (int): dimension of the embedding
+        beta (float): penalty parameter in matrix B of 2nd order objective
+        n_prev_graphs (int): Lookback (number of previous graphs to be considered) for the dynamic graph embedding
+        nu1 (float): L1-reg hyperparameter
+        nu2 (float): L2-reg hyperparameter
+        K (float): number of hidden layers in encoder/decoder
+        rho (float): bounding ratio for number of units in consecutive layers (< 1)
+        n_aeunits  (list) = List of embedding dimension for auto encoder layers
+        n_lstmunits= List of embedding dimension for lstm layers
+        n_iter (int): number of sgd iterations for first embedding (const)
+        xeta (float): sgd step size parameter
+        n_batch (int): minibatch size for SGD
+        modelfile (str): Files containing previous encoder and decoder models
+        weightfile (str): Files containing previous encoder and decoder weights
+        node_frac (float): Fraction of nodes to use for random walk
+        n_walks_per_node (int): Number of random walks to do for each selected nodes
+        len_rw (int): Length of every random walk
+    
+    Examples:
+        >>> from dynamicgem.embedding.sdne_dynamic import SDNE
+        >>> from dynamicgem.graph_generation import dynamic_SBM_graph
+        >>> node_num = 100
+        >>> community_num = 2
+        >>> node_change_num = 2
+        >>> length = 2
+        >>> dynamic_sbm_series = dynamic_SBM_graph.get_community_diminish_series(node_num, community_num, length, 1, node_change_num)
+        >>> dynamic_embedding = SDNE(d=16, beta=5, alpha=1e-5, nu1=1e-6, nu2=1e-6, K=3, n_units=[500, 300,], rho=0.3, n_iter=2, n_iter_subs=5, xeta=0.01, n_batch=500, modelfile=['./intermediate/enc_model.json', './intermediate/dec_model.json'], weightfile=['./intermediate/enc_weights.hdf5', './intermediate/dec_weights.hdf5'], node_frac=1, n_walks_per_node=10, len_rw=2)
+        >>> dynamic_embedding.learn_embeddings([g[0] for g in dynamic_sbm_series], False, subsample=False)
+        >>> plot_dynamic_sbm_embedding.plot_dynamic_sbm_embedding(dynamic_embedding.get_embeddings(), dynamic_sbm_series)
+        >>> plt.savefig('result/visualization_sdne_cd.png')
+        >>> plt.show()
+    """
     def __init__(self, d, beta, alpha, nu1, nu2, K, n_units, rho, n_iter, n_iter_subs, xeta, n_batch, modelfile=None,
                  weightfile=None, node_frac=1, n_walks_per_node=5, len_rw=2):
-        ''' Initialize the SDNE class
-
-        Args:
-            d: dimension of the embedding
-            beta: penalty parameter in matrix B of 2nd order objective
-            alpha: weighing hyperparameter for 1st order objective
-            nu1: L1-reg hyperparameter
-            nu2: L2-reg hyperparameter
-            K: number of hidden layers in encoder/decoder
-            n_units: vector of length K-1 containing #units in hidden layers of encoder/decoder, not including the units in the embedding layer
-            rho: bounding ratio for number of units in consecutive layers (< 1)
-            n_iter: number of sgd iterations for first embedding (const)
-            n_iter_subs: number of sgd iterations for subsequent embeddings (const)
-            xeta: sgd step size parameter
-            n_batch: minibatch size for SGD
-            modelfile: Files containing previous encoder and decoder models
-            weightfile: Files containing previous encoder and decoder weights
-            node_frac: Fraction of nodes to use for random walk
-            n_walks_per_node: Number of random walks to do for each selected nodes
-            len_rw: Length of every random walk
-        '''
+        ''' Initialize the SDNE class'''
         super().__init__(d)
         self._method_name = 'sdne' # embedding method name
         self._d = d
@@ -87,12 +92,33 @@ class SDNE(DynamicGraphEmbedding):
 
 
     def get_method_name(self):
+        """Function to return the method name.
+            
+           Returns:
+                String: Name of the method.
+        """
         return self._method_name
 
     def get_method_summary(self):
+        """Function to return the summary of the algorithm. 
+           
+           Returns:
+                String: Method summary
+        """
         return '%s_%d' % (self._method_name, self._d)
 
     def learn_embedding(self, graph, prevStepInfo=True, loadfilesuffix=None, savefilesuffix=None, subsample=False):
+        """Learns the embedding of the nodes.
+           
+           Attributes:
+               graph (Object): Networkx Graph Object
+               prevStepInfo (bool): Incorporate previous step info
+               loadfilesuffix (str): file suffix for loading the previos data
+               savefilesuffix (str): file suffix to be used for saving the data
+
+            Returns:
+                List: Node embeddings and time taken by the algorithm
+        """
         if subsample:
             S = graph_util.randwalk_DiGraph_to_adj(graph, node_frac=self._node_frac, n_walks_per_node=self._n_walks_per_node, len_rw=self._len_rw)
         else:
@@ -203,8 +229,8 @@ class SDNE(DynamicGraphEmbedding):
         else:
             self._num_iter = self._n_iter
             # If cannot use previous step information, initialize new models
-            self._encoder = get_encoder(self._node_num, self._d, self._K, self._n_units, self._nu1, self._nu2, self._actfn)
-            self._decoder = get_decoder(self._node_num, self._d, self._K, self._n_units, self._nu1, self._nu2, self._actfn)
+            self._encoder = get_encoder(self._node_num, self._d,  self._n_units, self._nu1, self._nu2, self._actfn)
+            self._decoder = get_decoder(self._node_num, self._d, self._n_units, self._nu1, self._nu2, self._actfn)
             self._autoencoder = get_autoencoder(self._encoder, self._decoder)
 
         # Initialize self._model
@@ -217,10 +243,7 @@ class SDNE(DynamicGraphEmbedding):
         [x_hat2, y2] = self._autoencoder(x2)
         # Outputs
         x_diff1 = Subtract()([x_hat1, x1])
-        # x_diff1 = merge([x_hat1, x1], mode=lambda (a,b): a - b, output_shape=lambda L: L[1])
-        # x_diff2 = merge([x_hat2, x2], mode=lambda (a,b): a - b, output_shape=lambda L: L[1])
         x_diff2 = Subtract()([x_hat2, x2])
-        # y_diff = merge([y2, y1], mode=lambda (a,b): a - b, output_shape=lambda L: L[1])
         y_diff = Subtract()([y2, y1])
 
         # Objectives
@@ -235,8 +258,11 @@ class SDNE(DynamicGraphEmbedding):
                 y_pred: Contains y2 - y1
                 y_true: Contains s12
             '''
-            min_batch_size = y_true.shape[0]
-            return KBack.sum(KBack.square(y_pred), axis=-1).reshape([min_batch_size, 1]) * y_true
+            min_batch_size = KBack.shape(y_true)[0]
+            return KBack.reshape(
+                KBack.sum(KBack.square(y_pred), axis=-1),
+                [min_batch_size, 1]
+            ) * y_true
 
         # Model
         self._model = Model(input=x_in, output=[x_diff1, x_diff2, y_diff])
@@ -296,6 +322,17 @@ class SDNE(DynamicGraphEmbedding):
         return self._Y
 
     def learn_embeddings(self, graphs, prevStepInfo = False, loadsuffixinfo=None, savesuffixinfo=None, subsample=False):
+        """Learns the embedding of the nodes.
+           
+           Attributes:
+               graph (Object): Networkx Graph Object
+               prevStepInfo (bool): Incorporate previous step info
+               loadfilesuffix (str): file suffix for loading the previos data
+               savefilesuffix (str): file suffix to be used for saving the data
+
+            Returns:
+                List: Node embeddings and time taken by the algorithm
+        """
         if loadsuffixinfo is None:
             if savesuffixinfo is None:
                 Y = self.learn_embedding(graphs[0], prevStepInfo, subsample=subsample)
@@ -323,12 +360,25 @@ class SDNE(DynamicGraphEmbedding):
         return self._Ys
 
     def get_embedding(self, filesuffix):
+        """Function to return sinfle embedding"""
         return self._Y if filesuffix is None else np.loadtxt('embedding_'+filesuffix+'.txt')
 
     def get_embeddings(self):
+        """Function to return all the  embeddings"""
         return self._Ys
 
     def get_edge_weight(self, i, j, embed=None, filesuffix=None):
+        """Function to get edge weight.
+           
+            Attributes:
+              i (int): source node for the edge.
+              j (int): target node for the edge.
+              embed (Matrix): Embedding values of all the nodes.
+              filesuffix (str): File suffix to be used to load the embedding.
+
+            Returns:
+                Float: Weight of the given edge.
+        """
         if embed is None:
             if filesuffix is None:
                 embed = self._Y
@@ -341,6 +391,16 @@ class SDNE(DynamicGraphEmbedding):
             return (S_hat[i,j] + S_hat[j,i])/2
 
     def get_reconstructed_adj(self, embed=None, filesuffix=None):
+        """Function to reconstruct the adjacency list for the given node.
+           
+            Attributes:
+              node_l (int): node for which the adjacency list will be created.
+              embed (Matrix): Embedding values of all the nodes.
+              filesuffix (str): File suffix to be used to load the embedding.
+
+            Returns:
+                List : Adjacency list of the given node.
+        """
         if embed is None:
             if filesuffix is None:
                 embed = self._Y
@@ -350,6 +410,16 @@ class SDNE(DynamicGraphEmbedding):
         return graphify(S_hat)
 
     def get_reconst_from_embed(self, embed, filesuffix=None):
+        """Function to reconstruct the graph from the embedding.
+           
+            Attributes:
+              node_l (int): node for which the adjacency list will be created.
+              embed (Matrix): Embedding values of all the nodes.
+              filesuffix (str): File suffix to be used to load the embedding.
+
+            Returns:
+                List: REconstructed graph for the given nodes.
+        """
         if filesuffix is None:
             return self._decoder.predict(embed, batch_size=self._n_batch)
         else:
@@ -365,36 +435,4 @@ class SDNE(DynamicGraphEmbedding):
                 exit()
             return decoder.predict(embed, batch_size=self._n_batch)
 
-if __name__ == '__main__':
-    parser = ArgumentParser(description='Learns node embeddings for a sequence of graph snapshots')
-    parser.add_argument('-t', '--testDataType', help='Type of data to test the code')
-    if len(sys.argv) < 2:
-        sys.argv = [sys.argv[0], '-h']
-    args = parser.parse_args()
-
-    if args.testDataType == 'sbm_rp':
-        node_num = 10000
-        community_num = 500
-        node_change_num = 100
-        length = 2
-        dynamic_sbm_series = dynamic_SBM_graph.get_random_perturbation_series(node_num, community_num, length, node_change_num)
-        dynamic_embedding = SDNE(d=100, beta=5, alpha=1e-5, nu1=1e-6, nu2=1e-6, K=3, n_units=[500, 300,], rho=0.3, n_iter=30, n_iter_subs=5, xeta=0.01, n_batch=500, modelfile=['./intermediate/enc_model.json', './intermediate/dec_model.json'], weightfile=['./intermediate/enc_weights.hdf5', './intermediate/dec_weights.hdf5'], node_frac=1, n_walks_per_node=10, len_rw=2)
-        dynamic_embedding.learn_embeddings([g[0] for g in dynamic_sbm_series], False, subsample=False)
-        plot_dynamic_sbm_embedding.plot_dynamic_sbm_embedding(dynamic_embedding.get_embeddings(), dynamic_sbm_series)
-        plt.savefig('result/visualization_sdne_rp.png')
-        plt.show()
-    elif args.testDataType == 'sbm_cd':
-        node_num = 10000
-        community_num = 500
-        node_change_num = 100
-        length = 2
-        dynamic_sbm_series = dynamic_SBM_graph.get_community_diminish_series(node_num, community_num, length, 1, node_change_num)
-        dynamic_embedding = SDNE(d=100, beta=5, alpha=1e-5, nu1=1e-6, nu2=1e-6, K=3, n_units=[500, 300,], rho=0.3, n_iter=30, n_iter_subs=5, xeta=0.01, n_batch=500, modelfile=['./intermediate/enc_model.json', './intermediate/dec_model.json'], weightfile=['./intermediate/enc_weights.hdf5', './intermediate/dec_weights.hdf5'], node_frac=1, n_walks_per_node=10, len_rw=2)
-        dynamic_embedding.learn_embeddings([g[0] for g in dynamic_sbm_series], False, subsample=False)
-        plot_dynamic_sbm_embedding.plot_dynamic_sbm_embedding(dynamic_embedding.get_embeddings(), dynamic_sbm_series)
-        plt.savefig('result/visualization_sdne_cd.png')
-        plt.show()
-    else:
-        dynamic_graph_series = graph_util.loadRealGraphSeries('data/real/hep-th/month_', 1, 5)
-        dynamic_embedding = SDNE(d=100, beta=2, alpha=1e-6, nu1=1e-5, nu2=1e-5, K=3, n_units=[400, 250,], rho=0.3, n_iter=100, n_iter_subs=30, xeta=0.001, n_batch=500, modelfile=['./intermediate/enc_model.json', './intermediate/dec_model.json'], weightfile=['./intermediate/enc_weights.hdf5', './intermediate/dec_weights.hdf5'])
-        dynamic_embedding.learn_embeddings(dynamic_graph_series, False)
+       
