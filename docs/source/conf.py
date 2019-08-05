@@ -21,11 +21,14 @@ import sphinx_rtd_theme
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
+print(os.path.abspath('../dynamicgem'))
 sys.path.insert(0, os.path.abspath('../dynamicgem'))
-# sys.path.insert(0, "/Users/sujito/Desktop/codes/dev/pykg2vec")
 # -- General configuration ---------------------------------------------------
 
-ver_file = os.path.join('../dynamicgem/dynamicgem', '_version.py')
+print(os.getcwd())
+print(os.path.abspath('../dynamicgem'))
+
+ver_file = os.path.join(os.path.abspath('../../dynamicgem/'), '_version.py')
 
 with open(ver_file) as f:
     exec(f.read())

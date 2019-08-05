@@ -1,3 +1,9 @@
+'''
+============================================
+Example Code for Dynamic Graph Factorization
+============================================
+'''
+
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
