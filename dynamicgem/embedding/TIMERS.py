@@ -10,6 +10,7 @@ import numpy as np
 from time import time
 
 from dynamicgem.embedding.static_graph_embedding import StaticGraphEmbedding
+from dynamicgem.visualization import plot_dynamic_sbm_embedding
 from dynamicgem.utils import graph_util, plot_util, dataprep_util
 from dynamicgem.utils.sdne_utils import *
 from dynamicgem.utils import timers_utils as tu
@@ -166,7 +167,7 @@ class TIMERS(StaticGraphEmbedding):
         """Function to plot the results"""
         plt.figure()
         plt.clf()
-        viz.plot_static_sbm_embedding(self._X[-4:], dynamic_sbm_series[-4:])
+        plot_dynamic_sbm_embedding.plot_dynamic_sbm_embedding_v2(self._X[-5:-1], dynamic_sbm_series[-5:])
 
         resultdir = self._resultdir + '/' + self._datatype
         if not os.path.exists(resultdir):

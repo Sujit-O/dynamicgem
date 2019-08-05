@@ -8,6 +8,7 @@ from dynamicgem.utils import dataprep_util
 from dynamicgem.embedding.TIMERS import TIMERS
 from dynamicgem.graph_generation import dynamic_SBM_graph as sbm
 from dynamicgem.evaluation import visualize_embedding as viz
+from dynamicgem.evaluation import evaluate_link_prediction as lp
 from time import time
 
 
@@ -39,7 +40,6 @@ def test_TIMERS():
     # parameters for the dynamic embedding
     # dimension of the embedding
     dim_emb = 8
-    lookback = 2
 
     # TIMERS
     datafile = dataprep_util.prep_input_TIMERS(graphs, length, testDataType)
@@ -66,8 +66,14 @@ def test_TIMERS():
     embedding.learn_embedding()
     embedding.get_embedding(outdir_tmp, 'optimalSVD')
     print(embedding._method_name + ':\n\tTraining time: %f' % (time() - t1))
-    embedding.plotresults(dynamic_sbm_series)
+    lp.expstaticLP_TIMERS(dynamic_sbm_series,
+                                  graphs,
+                                  embedding,
+                                  1,
+                                  outdir + '/',
+                                  'nm' + str(node_change_num) + '_l' + str(length) + '_emb' + str(int(dim_emb)),
+                                  )
 
 
 if __name__ == '__main__':
-    main()
+    test_TIMERS()
