@@ -33,6 +33,9 @@ jobs:
             python3 -m venv venv
             . venv/bin/activate
             pip install -r requirements.txt
+            pip install .
+            pip install 'pytest>=3.6'
+            pip install pytest-cov coverage coveralls
 
       - save_cache:
           paths:
@@ -48,7 +51,7 @@ jobs:
           name: run tests
           command: |
             . venv/bin/activate
-            python manage.py test
+            pytest --disable-pytest-warnings --cov dynamicgem
 
       - store_artifacts:
           path: test-reports
