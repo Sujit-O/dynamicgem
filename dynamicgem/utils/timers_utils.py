@@ -228,7 +228,7 @@ def getAddedEdge(A, filepath, M):
 def RefineBound(S_ori, S_add, Loss_ori, K):
 	"""Function to  calculate the objective funciton or loss.
        
-       Loss_Bound = Loss_ori + trace_change(S * S^T) - eigs(delta(S *S^T),K)
+       Loss_Bound = Loss_ori + trace_change(S x S^T) - eigs(delta(S x S^T),K)
 
         Args:
             S_ori (Sparse Matrix): Sparse scipy of original adjancey matrix

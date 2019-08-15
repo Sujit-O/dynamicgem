@@ -102,23 +102,12 @@ Experiments
 Graph Generation
 =================
 
-Hepth
--------
-
-.. automodule:: dynamicgem.graph_generation.createHepTHCollabNet_nx
-   :members:
-
 Dynamic Military Call Graph
 ----------------------------
 
 .. automodule:: dynamicgem.graph_generation.dynamic_military_call_graph
    :members:
 
-AS
----
-
-.. automodule:: dynamicgem.graph_generation.getAS_nx
-   :members:
 
 Stochastic Block Model Graph
 -----------------------------
