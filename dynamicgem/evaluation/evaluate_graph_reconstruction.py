@@ -14,6 +14,22 @@ def evaluateStaticGraphReconstruction(digraph,
                                       file_suffix=None,
                                       is_undirected=True,
                                       is_weighted=False):
+    """Function to evaluate static graph reconstruction
+           
+           Attributes:
+               digraph (Object): Networkx Graph Object
+               graph_embedding (object): Algorithm for learning graph embedding
+               X_stat (ndarray): Embedding values of the graph.
+               node_l (int): Total number of nodes.
+               sammple_ratio_e (float): SAmpling ration for testing. Only sample number of nodes are tested.
+               file_suffix (str): Suffix for file name.
+               is_undirected (bool): Flag to denote if the graph is directed.
+               is_weighted (bool): Flag denoting if the graph has weighted edge. 
+
+            Returns:
+                ndarray: MAP, precision curve, error values and error baselines
+    """
+
     node_num = digraph.number_of_nodes()
     # evaluation
     if sample_ratio_e:
@@ -62,6 +78,23 @@ def expGR(digraph,
           file_suffix=None,
           is_undirected=True,
           sampling_scheme="rw"):
+    """Function to evaluate graph reconstruction
+           
+           Attributes:
+               digraph (Object): Networkx Graph Object
+               graph_embedding (object): Algorithm for learning graph embedding
+               X_stat (ndarray): Embedding values of the graph.
+               n_sampled_nodes (int): Total number of nodes.
+               rounds (int): Number of times to run the experiment
+               res_pre (str): prefix to be used to store the result. 
+               m_summ (str): summary to be used to save the result.
+               file_suffix (str): Suffix for file name.
+               is_undirected (bool): Flag to denote if the graph is directed.
+               sampling_scheme(str): sampling scheme for selecting the nodes.
+
+            Returns:
+                ndarray: Mean Average precision
+    """
     print('\tGraph Reconstruction')
     n_sampled_nodes = int(n_sampled_nodes)
     summ_file = open('%s_%s.grsumm' % (res_pre, m_summ), 'w')
