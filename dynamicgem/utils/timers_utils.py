@@ -430,21 +430,321 @@ def TIMERS(dataFolder, K, Theta, datatype):
 
 
 
+def incrementalSVD(dataFolder, K, Theta, datatype):
+	"""Main timer function to perform embedding.
+           
+        Args:
+            dataFolder (str): directory with the test data consiting of numbers to denote time varying dynamic graph.
+            K (float): Embedding dimension
+      		Theta (float): a threshold for re-run SVD
+      		datatype (str): type of graph 
+
+    """
+	# Update the embedding
+	Update = 1
+	time_slice = len(os.listdir(dataFolder))
+	# dictionary to store the USV values
+	U = {}
+	S = {}
+	V = {}
+	# store loss for each time stamp
+	Loss_store = {}
+	# store loss bound for each time stamp
+	Loss_bound = {}
+	# store how many time the rerun is executed
+	run_times = 1
+	# store the rerun based on time slice
+	Run_t = np.zeros([time_slice+1,1])
+
+	#  Calculate Original Similarity Matrix
+	# In this reference implementation, we assume similarity is 
+	# adjacency matrix. Other variants shoule be straight-forward.
+	print("Creating a hashmap for arbitrary node name to consecutive ones!")
+	M = hasmapping(dataFolder+'/0')
+	# Get the first time slice data for initialization
+	print("Parsing the data for initialization!")
+	A = parseData(dataFolder+'/0', M)
+	# Initialize the symmetric matrix
+	Sim = A
+	N = A.shape[0]
+
+	# calculate static solution
+	print("Creating the svds for the first time_slice!")
+	# import pdb
+	# pdb.set_trace()
+	U[0], S[0], V[0] = svds(A, k=K)
+
+	U_cur = U[0] * np.sqrt(S[0])
+	V_cur = np.transpose(V[0]) * np.sqrt(S[0])
+
+	if not os.path.exists(output):
+		os.mkdir(output)
+
+	if not os.path.exists(output+'/'+datatype):
+		os.mkdir(output+'/'+datatype)
+
+	# save the current embeddings
+	
+	with open(output+'/'+datatype +'/0_U.txt','wb') as fh:
+		for line in np.asmatrix(U_cur):
+			np.savetxt(fh, line, fmt='%.4f')
+
+	with open(output+'/'+datatype +'/0_V.txt','wb') as fh:
+		for line in np.asmatrix(V_cur):
+			np.savetxt(fh, line, fmt='%.4f')
+
+	# get the current loss
+	print("Calculating the loss for first time slice!")
+	Loss_store[0] = Obj(Sim, U_cur, V_cur)
+	print("Loss for first time slice:", Loss_store[0])
+	# assign the bound as current loss
+	Loss_bound[0] = Loss_store[0]
+
+	# Store the cummulative similairty matrix
+	S_cum = Sim
+	# Store the cumulative perturbation from last rerun
+	S_perturb = csc_matrix(([0], ([0], [0])), shape=(N, N), dtype=float)
+
+	loss_rerun = Loss_store[0]
+
+	for i in range(1,time_slice):
+		print("calculating the embedding for time slice:",i)
+		S_add = deltaA(S_cum,dataFolder+'/'+str(i),M)
+		S_perturb = S_perturb + S_add
+
+		if (Update):
+			U[i], S[i], V[i] = TRIP(U[i-1],S[i-1],V[i-1],S_add)
+			# Note: TRIP does not insure smaller value
+
+			U_cur = U[i] * np.sqrt(S[i])
+			V_cur = V[i] * np.sqrt(S[i])
+
+			# save the current embeddings		
+			with open(output+'/'+datatype +'/incrementalSVD/'+str(i)+'_U.txt','wb') as fh:
+				for line in U_cur:
+					np.savetxt(fh, line, fmt='%.4f')
+
+			with open(output+'/'+datatype +'/incrementalSVD/'+str(i)+'_V.txt','wb') as fh:
+				for line in V_cur:
+					np.savetxt(fh, line, fmt='%.4f')
 
 
+def optimalSVD(dataFolder, K, Theta, datatype):
+	"""Main timer function to perform embedding.
+           
+        Args:
+            dataFolder (str): directory with the test data consiting of numbers to denote time varying dynamic graph.
+            K (float): Embedding dimension
+      		Theta (float): a threshold for re-run SVD
+      		datatype (str): type of graph 
+
+    """
+	# Update the embedding
+	Update = 1
+	time_slice = len(os.listdir(dataFolder))
+	# dictionary to store the USV values
+	U = {}
+	S = {}
+	V = {}
+	# store loss for each time stamp
+	Loss_store = {}
+	# store loss bound for each time stamp
+	Loss_bound = {}
+	# store how many time the rerun is executed
+	run_times = 1
+	# store the rerun based on time slice
+	Run_t = np.zeros([time_slice+1,1])
+
+	#  Calculate Original Similarity Matrix
+	# In this reference implementation, we assume similarity is 
+	# adjacency matrix. Other variants shoule be straight-forward.
+	print("Creating a hashmap for arbitrary node name to consecutive ones!")
+	M = hasmapping(dataFolder+'/0')
+	# Get the first time slice data for initialization
+	print("Parsing the data for initialization!")
+	A = parseData(dataFolder+'/0', M)
+	# Initialize the symmetric matrix
+	Sim = A
+	N = A.shape[0]
+
+	# calculate static solution
+	print("Creating the svds for the first time_slice!")
+	# import pdb
+	# pdb.set_trace()
+	U[0], S[0], V[0] = svds(A, k=K)
+
+	U_cur = U[0] * np.sqrt(S[0])
+	V_cur = np.transpose(V[0]) * np.sqrt(S[0])
+
+	if not os.path.exists(output):
+		os.mkdir(output)
+
+	if not os.path.exists(output+'/'+datatype):
+		os.mkdir(output+'/'+datatype)
+
+	# save the current embeddings
+	
+	with open(output+'/'+datatype +'/0_U.txt','wb') as fh:
+		for line in np.asmatrix(U_cur):
+			np.savetxt(fh, line, fmt='%.4f')
+
+	with open(output+'/'+datatype +'/0_V.txt','wb') as fh:
+		for line in np.asmatrix(V_cur):
+			np.savetxt(fh, line, fmt='%.4f')
+
+	# get the current loss
+	print("Calculating the loss for first time slice!")
+	Loss_store[0] = Obj(Sim, U_cur, V_cur)
+	print("Loss for first time slice:", Loss_store[0])
+	# assign the bound as current loss
+
+	# Evaluation
+	Loss_optimal = {}
+	Loss_optimal[0] = Loss_store[0]
+	Sim = A
+
+	S_cum = Sim
+
+	for i in range(1, time_slice):
+		S_add = getAddedEdge(S_cum,dataFolder+'/'+str(i),M)
+		S_cum = S_cum + S_add
+		temp_U, temp_S, temp_V = svds(S_cum, k=K)
+
+		# import pdb
+		# pdb.set_trace()
+		temp_U = temp_U * np.sqrt(temp_S)
+		temp_V = np.transpose(temp_V) * np.sqrt(temp_S)
+
+		# save the current embeddings		
+		with open(output+'/'+datatype +'/optimalSVD/'+str(i)+'_U.txt','wb') as fh:
+			for line in temp_U:
+				np.savetxt(fh, line, fmt='%.4f')
+
+		with open(output+'/'+datatype +'/optimalSVD/'+str(i)+'_V.txt','wb') as fh:
+			for line in temp_V:
+				np.savetxt(fh, line, fmt='%.4f')
+
+		Loss_optimal[i] = Obj(S_cum, temp_U, temp_V)
+
+		print("Optimal Loss for ", i, ":", Loss_optimal[i])
 
 
+def rerunSVD(dataFolder, K, Theta, datatype):
+	"""Main timer function to perform embedding.
+           
+        Args:
+            dataFolder (str): directory with the test data consiting of numbers to denote time varying dynamic graph.
+            K (float): Embedding dimension
+      		Theta (float): a threshold for re-run SVD
+      		datatype (str): type of graph 
 
+    """
+	# Update the embedding
+	Update = 1
+	time_slice = len(os.listdir(dataFolder))
+	# dictionary to store the USV values
+	U = {}
+	S = {}
+	V = {}
+	# store loss for each time stamp
+	Loss_store = {}
+	# store loss bound for each time stamp
+	Loss_bound = {}
+	# store how many time the rerun is executed
+	run_times = 1
+	# store the rerun based on time slice
+	Run_t = np.zeros([time_slice+1,1])
 
+	#  Calculate Original Similarity Matrix
+	# In this reference implementation, we assume similarity is 
+	# adjacency matrix. Other variants shoule be straight-forward.
+	print("Creating a hashmap for arbitrary node name to consecutive ones!")
+	M = hasmapping(dataFolder+'/0')
+	# Get the first time slice data for initialization
+	print("Parsing the data for initialization!")
+	A = parseData(dataFolder+'/0', M)
+	# Initialize the symmetric matrix
+	Sim = A
+	N = A.shape[0]
 
+	# calculate static solution
+	print("Creating the svds for the first time_slice!")
+	# import pdb
+	# pdb.set_trace()
+	U[0], S[0], V[0] = svds(A, k=K)
 
-			
+	U_cur = U[0] * np.sqrt(S[0])
+	V_cur = np.transpose(V[0]) * np.sqrt(S[0])
 
+	if not os.path.exists(output):
+		os.mkdir(output)
 
+	if not os.path.exists(output+'/'+datatype):
+		os.mkdir(output+'/'+datatype)
 
+	# save the current embeddings
+	
+	with open(output+'/'+datatype +'/0_U.txt','wb') as fh:
+		for line in np.asmatrix(U_cur):
+			np.savetxt(fh, line, fmt='%.4f')
 
+	with open(output+'/'+datatype +'/0_V.txt','wb') as fh:
+		for line in np.asmatrix(V_cur):
+			np.savetxt(fh, line, fmt='%.4f')
 
+	# get the current loss
+	print("Calculating the loss for first time slice!")
+	Loss_store[0] = Obj(Sim, U_cur, V_cur)
+	print("Loss for first time slice:", Loss_store[0])
+	# assign the bound as current loss
+	Loss_bound[0] = Loss_store[0]
 
+	# Store the cummulative similairty matrix
+	S_cum = Sim
+	# Store the cumulative perturbation from last rerun
+	S_perturb = csc_matrix(([0], ([0], [0])), shape=(N, N), dtype=float)
 
+	loss_rerun = Loss_store[0]
 
+	for i in range(1,time_slice):
+		print("calculating the embedding for time slice:",i)
+		S_add = deltaA(S_cum,dataFolder+'/'+str(i),M)
+		S_perturb = S_perturb + S_add
 
+		if (Update):
+			U[i], S[i], V[i] = TRIP(U[i-1],S[i-1],V[i-1],S_add)
+			# Note: TRIP does not insure smaller value
+
+			U_cur = U[i] * np.sqrt(S[i])
+			V_cur = V[i] * np.sqrt(S[i])
+
+			Loss_store[i] = Obj(S_cum+S_add, U_cur, V_cur)
+		else:
+			Loss_store[i] = Obj_SimChange(S_cum,S_add,U_cur,V_cur)
+
+		Loss_bound[i] = RefineBound(Sim,S_perturb,loss_rerun,K)	
+		S_cum = S_cum + S_add
+
+		if Loss_store[i]>= (1+Theta) * Loss_bound[i]:
+			print("Begin rerun at time stamp:", i)
+			Sim = S_cum
+			S_perturb = csc_matrix(([0], ([0], [0])), shape=(N, N),dtype=float)
+			run_times = run_times +1
+			Run_t[run_times] = i
+
+			U[i], S[i], V[i] = svds(Sim, K)
+			U_cur = U[i] * np.sqrt(S[i])
+			V_cur = np.transpose(V[i]) * np.sqrt(S[i])
+
+			loss_rerun = Obj(Sim,U_cur,V_cur);
+			Loss_store[i] = loss_rerun
+			Loss_bound[i] = loss_rerun
+
+			# save the current embeddings		
+			with open(output+'/'+datatype +'/rerunSVD/'+str(i)+'_U.txt','wb') as fh:
+				for line in U_cur:
+					np.savetxt(fh, line, fmt='%.4f')
+
+			with open(output+'/'+datatype +'/rerunSVD/'+str(i)+'_V.txt','wb') as fh:
+				for line in V_cur:
+					np.savetxt(fh, line, fmt='%.4f')
