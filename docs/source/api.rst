@@ -8,13 +8,13 @@ AE Static
 .. automodule:: dynamicgem.embedding.ae_static
    :members: AE
 
-Dynamice AE (dyngraph2vecAE)
+DynamicAE (dyngraph2vecAE)
 ----------------------------
 
 .. automodule:: dynamicgem.embedding.dynAE
    :members: DynAE
 
-Dynamic AE with RNN (dyngraph2vecAERNN)
+DynamicAERNN (dyngraph2vecAERNN)
 ---------------------------------------
 
 .. automodule:: dynamicgem.embedding.dynAERNN
