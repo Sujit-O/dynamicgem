@@ -32,6 +32,7 @@ seaborn.set_style("darkgrid")
 
 
 def plot_embedding2D(node_pos, node_colors=None, di_graph=None):
+    """Function to plot the embedding in two dimension using TSNE to reduce the dimension"""
     node_num, embedding_dimension = node_pos.shape
     if (embedding_dimension > 2):
         print("Embedding dimension greater than 2, use tSNE to reduce it to 2")
@@ -61,6 +62,7 @@ def plot_embedding2D(node_pos, node_colors=None, di_graph=None):
 
 
 def expVis(X, res_pre, m_summ, node_labels=None, di_graph=None):
+    """Function to perform visualixe the experiments of dynamic graph"""
     print('\tGraph Visualization:')
     if node_labels:
         node_colors = plot_util.get_node_color(node_labels)
@@ -74,6 +76,7 @@ def expVis(X, res_pre, m_summ, node_labels=None, di_graph=None):
 
 
 def plot_single_step(node_pos, graph_info, dyn_changed_node):
+    """Function to plot a single step"""
     node_colors = plot_util.get_node_color(graph_info[1])
     node_num, embedding_dimension = node_pos.shape
     pos = {}
@@ -100,6 +103,7 @@ def plot_single_step(node_pos, graph_info, dyn_changed_node):
 #     nodes_draw.set_edgecolor('k')
 
 def plot_static_sbm_embedding(nodes_pos_list, dynamic_sbm_series):
+    """Function to plot the static sbm embedding"""
     length = len(dynamic_sbm_series)
     node_num, dimension = nodes_pos_list[0].shape
 
