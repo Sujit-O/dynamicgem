@@ -89,13 +89,13 @@ Experiments
 Config
 -------
 
-.. automodule:: dynamicgem.evaluation.config
+.. automodule:: dynamicgem.experiments.config
    :members:
 
 Experiments
 -----------
 
-.. automodule:: dynamicgem.evaluation.exp
+.. automodule:: dynamicgem.experiments.exp
    :members:
 
 
@@ -145,7 +145,7 @@ dynamictriad Utils
 Data Preparation Utils
 -----------------------
 
-.. automodule:: dynamicgem.utils.dataprep_utils
+.. automodule:: dynamicgem.utils.dataprep_util
    :members:
 
 Dynamic Neural Network Utils
@@ -157,25 +157,25 @@ Dynamic Neural Network Utils
 Embedding Utils
 -----------------------
 
-.. automodule:: dynamicgem.utils.embed_utils
+.. automodule:: dynamicgem.utils.embed_util
    :members:
 
 Evaluation Utils
 -----------------------
 
-.. automodule:: dynamicgem.utils.evaluation_utils
+.. automodule:: dynamicgem.utils.evaluation_util
    :members:
 
 Figure Utils
 -----------------------
 
-.. automodule:: dynamicgem.utils.fig_utils
+.. automodule:: dynamicgem.utils.fig_util
    :members:
 
 Graph Utils
 -----------------------
 
-.. automodule:: dynamicgem.utils.graph_utils
+.. automodule:: dynamicgem.utils.graph_util
    :members:
 
 Static Neural Network Utils
