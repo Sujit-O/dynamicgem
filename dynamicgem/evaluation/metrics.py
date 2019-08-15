@@ -5,6 +5,16 @@ precision_pos = [2, 10, 100, 200, 300, 500, 1000]
 
 
 def computePrecisionCurve(predicted_edge_list, true_digraph, max_k=-1):
+    """Function to calculate the precision curve
+           
+           Attributes:
+               predicted_edge_list (list): List of predicted edges.
+               true_digraph (object): original graph
+               max_k(int): precision@k
+
+            Returns:
+                ndarray: precision_scores, delta_factors
+    """
     if max_k == -1:
         max_k = len(predicted_edge_list)
     else:
@@ -26,6 +36,16 @@ def computePrecisionCurve(predicted_edge_list, true_digraph, max_k=-1):
 
 
 def computeMAP(predicted_edge_list, true_digraph, max_k=-1):
+    """Function to calculate Mean Average Precision
+           
+           Attributes:
+               predicted_edge_list (list): List of predicted edges.
+               true_digraph (object): original graph
+               max_k(int): precision@k
+
+            Returns:
+                Float: Mean Average Precision score
+    """
     node_num = true_digraph.number_of_nodes()
     node_edges = []
     for i in range(node_num):
@@ -48,6 +68,15 @@ def computeMAP(predicted_edge_list, true_digraph, max_k=-1):
 
 
 def checkedges(edge_list, e):
+     """Function to check if the given edgelist matches.
+           
+           Attributes:
+               edge_list (list): List of predicted edges.
+               e (list): Original edge list
+
+            Returns:
+                bool: Boolean result to denoe if all the edges matches.
+    """
     val = False
 
     for k in edge_list:
@@ -63,12 +92,14 @@ def checkedges(edge_list, e):
 
 
 def getMetricsHeader():
+    """Function to get the header for storing the result"""
     header = 'MAP\t' + '\t'.join(['P@%d' % p for p in precision_pos])
     header = header + '\tP@EdgeNum'
     return header
 
 
 def getPrecisionReport(prec_curv, edge_num):
+    """Function to get the report summary for precision"""
     result_str = ''
     temp_pos = precision_pos[:] + [edge_num]
     for p in temp_pos:
@@ -83,17 +114,20 @@ def getPrecisionReport(prec_curv, edge_num):
 # nxn adjacenecy matrices S1 and S2 as:
 # StabDev = (||S1||_F * ||X2 - X1||_F) / (||X1||_F * ||S2 - S1||_F)
 def getStabilityDev(X1, X2, S1, S2):
+    """Function to get the deviation froms stability"""
     n1, d = X1.shape
     return (np.linalg.norm(S1) * np.linalg.norm(X2[:n1, :] - X1)) / (
                 np.linalg.norm(X1) * np.linalg.norm(S2[:n1, :n1] - S1))
 
 
 def getEmbeddingShift(X1, X2, S1, S2):
+    """Function to get the shift in embedding"""
     n1, d = X1.shape
     return (np.linalg.norm(X2[:n1, :] - X1)) / (n1 * d)
 
 
 def getNodeAnomaly(X_dyn):
+    """Function to get the node anomaly"""
     T = len(X_dyn)
     n_nodes = X_dyn[0].shape[0]
     node_anom = np.zeros((n_nodes, T - 1))
@@ -103,6 +137,17 @@ def getNodeAnomaly(X_dyn):
 
 
 def computePrecisionCurve_changed(predicted_edge_list, true_digraph, node_edges_rm, max_k=-1):
+    """Function to calculate Preicison curve of changed graph
+           
+           Attributes:
+               predicted_edge_list (list): List of predicted edges.
+               true_digraph (object): original graph
+               node_edges_rm (list): list of edges removed from the original graph.
+               max_k(int): precision@k
+
+            Returns:
+                Float: Mean Average Precision score
+    """
     if max_k == -1:
         max_k = len(predicted_edge_list) + len(node_edges_rm)
     else:
@@ -136,6 +181,18 @@ def computePrecisionCurve_changed(predicted_edge_list, true_digraph, node_edges_
 
 
 def computeMAP_changed(predicted_edge_list, true_digraph, node_dict, edges_rm, max_k=-1):
+    """Function to calculate MAP of the change graph
+           
+           Attributes:
+               predicted_edge_list (list): List of predicted edges.
+               true_digraph (object): original graph
+               node_dict (dict): Dictionary for the nodes.
+               node_edges_rm (list): list of edges removed from the original graph.
+               max_k(int): precision@k
+
+            Returns:
+                Float: Mean Average Precision score
+    """
     node_num = true_digraph.number_of_nodes()
     node_edges = []
     for i in range(node_num):
