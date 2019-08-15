@@ -68,7 +68,7 @@ def computeMAP(predicted_edge_list, true_digraph, max_k=-1):
 
 
 def checkedges(edge_list, e):
-     """Function to check if the given edgelist matches.
+    """Function to check if the given edgelist matches.
            
            Attributes:
                edge_list (list): List of predicted edges.

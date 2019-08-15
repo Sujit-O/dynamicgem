@@ -72,7 +72,7 @@ def evaluateDynamicLinkPrediction_TIMERS(graph,
                                          no_python=False,
                                          is_undirected=True,
                                          sampling_scheme="u_rand"):
-     """Function to evaluate Dynamic Link Prediction for TIMERS
+    """Function to evaluate Dynamic Link Prediction for TIMERS
            
            Attributes:
                graph (Object): Networkx Graph Object
@@ -313,7 +313,6 @@ def evaluateDynamic_changed_LinkPrediction_v2(graph,
                                               no_python=False,
                                               is_undirected=True,
                                               sampling_scheme="u_rand"):
-                                           sampling_scheme="u_rand"):
     """Function to evaluate dynamic changed link prediction
            
            Attributes:
