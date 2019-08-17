@@ -18,7 +18,7 @@ import pdb
 from dynamicgem.graph_generation import dynamic_SBM_graph
 from dynamicgem.utils import graph_util
 from dynamicgem.utils import plot_util
-from .plot_static_embedding import *
+from dynamicgem.visualization.plot_static_embedding import *
 from matplotlib import rc
 import seaborn
 

@@ -16,8 +16,8 @@ import sys
 sys.path.append('./')
 import pdb
 
-from utils import graph_util
-from utils import plot_util
+from dynamicgem.utils import graph_util
+from dynamicgem.utils import plot_util
 
 
 def plot_single_step(node_pos, graph, node_labels):

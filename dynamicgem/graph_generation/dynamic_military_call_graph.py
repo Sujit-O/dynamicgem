@@ -1,10 +1,10 @@
-import cPickle as pickle
+import pickle
 import numpy as np
 import networkx as nx
 import pdb
 import pandas as pd
 
-from  dynamicgem.static_military_call_graph import *
+from  dynamicgem.graph_generation.static_military_call_graph import *
 
 def resample_edge_for_node(call_graph, node_id):
     if call_graph._graph is None:
