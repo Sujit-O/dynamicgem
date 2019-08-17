@@ -18,6 +18,12 @@ function_mapping = {'degree': nx.degree_centrality,
 
 
 def _resample_egde_for_node(sbm_graph, node_id):
+    """Function to resample the nodes
+           
+           Attributes:
+               sbm_graph (Object): Networkx Graph Object
+               node_id (int): Id of the node to resample
+    """
     if sbm_graph._graph is None:
         sbm_graph.sample_graph()
     else:
@@ -35,6 +41,12 @@ def _resample_egde_for_node(sbm_graph, node_id):
 
 
 def _resample_egde_for_node_v2(sbm_graph, node_id):
+    """Function to resample the nodes
+           
+           Attributes:
+               sbm_graph (Object): Networkx Graph Object
+               node_id (int): Id of the node to resample
+    """
     if sbm_graph._graph is None:
         sbm_graph.sample_graph()
     else:
@@ -57,6 +69,12 @@ def _resample_egde_for_node_v2(sbm_graph, node_id):
 
 
 def dyn_node_chng(sbm_graph, node_id):
+    """Function to dynamically change the nodes
+           
+           Attributes:
+               sbm_graph (Object): Networkx Graph Object
+               node_id (int): Id of the node to resample
+    """
     if sbm_graph._graph is None:
         sbm_graph.sample_graph()
     else:
@@ -79,6 +97,12 @@ def dyn_node_chng(sbm_graph, node_id):
 
 
 def dyn_node_chng_v2(sbm_graph, node_id):
+    """Function to dynamically change the nodes
+           
+           Attributes:
+               sbm_graph (Object): Networkx Graph Object
+               node_id (int): Id of the node to resample
+    """
     if sbm_graph._graph is None:
         sbm_graph.sample_graph()
     else:
@@ -102,6 +126,12 @@ def dyn_node_chng_v2(sbm_graph, node_id):
 
 
 def random_node_perturbation(sbm_graph, nodes_to_purturb):
+    """Function to randomly perturb the nodes
+           
+           Attributes:
+               sbm_graph (Object): Networkx Graph Object
+               nodes_to_purturb (int): Number of nodes to perturb
+    """
     n = sbm_graph._node_num
     # Add a function to give perturbed_nodes based on adifferent criterias
     perturb_nodes = random.sample(range(n), nodes_to_purturb)
@@ -117,6 +147,15 @@ def random_node_perturbation(sbm_graph, nodes_to_purturb):
 
 
 def diminish_community(sbm_graph, community_id, nodes_to_purturb, criteria, criteria_r):
+    """Function to diminsh the SBM community
+           
+           Attributes:
+               sbm_graph (Object): Networkx Graph Object
+               community_id (int): Community to diminish
+               criteria (str): Criteria used to diminish the community
+               criteria_r (bool): Used to sort the nodes in reverse once order based on criteria
+               nodes_to_purturb (int): Number of nodes to perturb
+    """
     n = sbm_graph._node_num
     community_nodes = [i for i in range(n) if sbm_graph._node_community[i] == community_id]
     nodes_to_purturb = min(len(community_nodes), nodes_to_purturb)
@@ -179,6 +218,14 @@ def diminish_community(sbm_graph, community_id, nodes_to_purturb, criteria, crit
 
 
 def diminish_community_v2(sbm_graph, community_id, nodes_to_purturb, chngnodes):
+    """Function to diminsh the SBM community
+           
+           Attributes:
+               sbm_graph (Object): Networkx Graph Object
+               community_id (int): Community to diminish
+               nodes_to_purturb (int): Number of nodes to perturb
+               chngnodes (list): List of nodes that is perturbed
+    """
     n = sbm_graph._node_num
     community_nodes = [i for i in range(n) if sbm_graph._node_community[i] == community_id]
     nodes_to_purturb = min(len(community_nodes), nodes_to_purturb)
@@ -235,6 +282,14 @@ def diminish_community_v2(sbm_graph, community_id, nodes_to_purturb, chngnodes):
 
 
 def get_random_perturbation_series(node_num, community_num, length, nodes_to_purturb):
+    """Function to get random perturbation
+           
+           Attributes:
+               node_num (int): Total number of nodes
+               community_num (int): Total number of community
+               nodes_to_purturb (int): Number of nodes to perturb
+               length (int): Length of the graph sequence
+    """
     my_graph = SBM_graph.SBMGraph(node_num, community_num)
     my_graph.sample_graph()
 
@@ -259,6 +314,17 @@ def get_community_diminish_series(node_num,
                                   nodes_to_purturb,
                                   criteria,
                                   criteria_r):
+    """Function to get diminshing community series
+           
+           Attributes:
+               node_num (int): Total number of nodes
+               community_num (int): Total number of community
+               nodes_to_purturb (int): Number of nodes to perturb
+               length (int): Length of the graph sequence
+               community_id (int): Community to diminish
+               criteria (str): Criteria used to diminish the community
+               criteria_r (bool): Used to sort the nodes in reverse once order based on criteria
+    """
     my_graph = SBM_graph.SBMGraph(node_num, community_num, community_id, nodes_to_purturb)
     my_graph.sample_graph_v3()
     chngnodes = my_graph._chngnodes
@@ -299,6 +365,15 @@ def get_community_diminish_series_v2(node_num,
                                      community_id,
                                      nodes_to_purturb,
                                      ):
+    """Function to get diminishing community series
+           
+           Attributes:
+               node_num (int): Total number of nodes
+               community_num (int): Total number of community
+               nodes_to_purturb (int): Number of nodes to perturb
+               length (int): Length of the graph sequence
+               community_id (int): Community to diminish
+    """
     my_graph = SBM_graph.SBMGraph(node_num, community_num, community_id, nodes_to_purturb)
     my_graph.sample_graph_v3()
     chngnodes = my_graph._chngnodes
@@ -328,6 +403,7 @@ def get_community_diminish_series_v2(node_num,
 
 
 def drawGraph(node_num, community_num):
+    """Function to draw the graphs"""
     my_graph = SBM_graph.SBMGraph(node_num, community_num)
     my_graph.sample_graph()
     graphs = [my_graph._graph.copy()]

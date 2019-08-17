@@ -122,106 +122,101 @@ Experiments
 Graph Generation
 =================
 
-Dynamic Military Call Graph
-----------------------------
-
-.. automodule:: dynamicgem.graph_generation.dynamic_military_call_graph
-   :members:
-
-
-Stochastic Block Model Graph
------------------------------
-
-.. automodule:: dynamicgem.graph_generation.SBM_graph
-   :members:
-
-Static Military Call Graph
-----------------------------
-
-.. automodule:: dynamicgem.graph_generation.static_military_call_graph
-   :members:
-
-
-Utility Functions
-=================
-
-dynamictriad Utils
--------------------
-
-.. automodule:: dynamicgem.utils.dynamictriad_utils
-   :members:
-
-Data Preparation Utils
------------------------
-
-.. automodule:: dynamicgem.utils.dataprep_util
-   :members:
-
-Dynamic Neural Network Utils
-----------------------------
-
-.. automodule:: dynamicgem.utils.dnn_utils
-   :members:
-
-Embedding Utils
------------------------
-
-.. automodule:: dynamicgem.utils.embed_util
-   :members:
-
-Evaluation Utils
------------------------
-
-.. automodule:: dynamicgem.utils.evaluation_util
-   :members:
-
-Figure Utils
------------------------
-
-.. automodule:: dynamicgem.utils.fig_util
-   :members:
-
-Graph Utils
------------------------
-
-.. automodule:: dynamicgem.utils.graph_util
-   :members:
-
-Static Neural Network Utils
----------------------------
-
-.. automodule:: dynamicgem.utils.sdne_utils
-   :members:
-
-TIMERS Utils
------------------------
-
-.. automodule:: dynamicgem.utils.timers_utils
-   :members:
-
-Timer Series Utils
------------------------
-
-.. automodule:: dynamicgem.utils.ts_utils
-   :members:
-
-Visualization Functions
-=======================
-
-Plotting Dynamic Graph Embedding
---------------------------------
-
-.. automodule:: dynamicgem.visualization.plot_dynamic_embedding
-   :members:
-
-Plotting Dynamic SBM Graph Embedding
+Dynamic Stochastic Block Model Graph
 -------------------------------------
 
-.. automodule:: dynamicgem.visualization.plot_dynamic_sbm_embedding
+.. automodule:: dynamicgem.graph_generation.dynamic_SBM_graph
    :members:
+   
 
-Plotting Static Graph Embedding
---------------------------------
+.. Stochastic Block Model Graph
+.. -----------------------------
 
-.. automodule:: dynamicgem.visualization.plot_static_embedding
-   :members:
+.. .. automodule:: dynamicgem.graph_generation.SBM_graph
+..    :members:
+
+
+
+.. Node Migration for SBM
+.. -----------------------
+
+.. .. automodule:: dynamicgem.graph_generation.SBM_node_migration
+..    :members:
+
+.. Utility Functions
+.. =================
+
+.. Data Preparation Utils
+.. -----------------------
+
+.. .. automodule:: dynamicgem.utils.dataprep_util
+..    :members:
+
+.. Dynamic Neural Network Utils
+.. ----------------------------
+
+.. .. automodule:: dynamicgem.utils.dnn_utils
+..    :members:
+
+.. Embedding Utils
+.. -----------------------
+
+.. .. automodule:: dynamicgem.utils.embed_util
+..    :members:
+
+.. Evaluation Utils
+.. -----------------------
+
+.. .. automodule:: dynamicgem.utils.evaluation_util
+..    :members:
+
+.. Figure Utils
+.. -----------------------
+
+.. .. automodule:: dynamicgem.utils.fig_util
+..    :members:
+
+.. Graph Utils
+.. -----------------------
+
+.. .. automodule:: dynamicgem.utils.graph_util
+..    :members:
+
+.. Static Neural Network Utils
+.. ---------------------------
+
+.. .. automodule:: dynamicgem.utils.sdne_utils
+..    :members:
+
+.. TIMERS Utils
+.. -----------------------
+
+.. .. automodule:: dynamicgem.utils.timers_utils
+..    :members:
+
+.. Timer Series Utils
+.. -----------------------
+
+.. .. automodule:: dynamicgem.utils.ts_utils
+..    :members:
+
+.. Visualization Functions
+.. =======================
+
+.. Plotting Dynamic Graph Embedding
+.. --------------------------------
+
+.. .. automodule:: dynamicgem.visualization.plot_dynamic_embedding
+..    :members:
+
+.. Plotting Dynamic SBM Graph Embedding
+.. -------------------------------------
+
+.. .. automodule:: dynamicgem.visualization.plot_dynamic_sbm_embedding
+..    :members:
+
+.. Plotting Static Graph Embedding
+.. --------------------------------
+
+.. .. automodule:: dynamicgem.visualization.plot_static_embedding
+..    :members:
