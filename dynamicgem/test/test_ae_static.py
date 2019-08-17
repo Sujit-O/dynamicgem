@@ -66,4 +66,4 @@ def test_ae_static():
 
 
 if __name__ == '__main__':
-    main()
+    test_ae_static()
