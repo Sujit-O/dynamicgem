@@ -82,7 +82,7 @@ Graph Reconstruction
 ----------------------
 
 .. automodule:: dynamicgem.evaluation.evaluate_graph_reconstruction
-   :members:
+   :members: evaluateStaticGraphReconstruction, expGR
 
 Link Prediction
 ----------------
