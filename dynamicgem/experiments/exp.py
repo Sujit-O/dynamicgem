@@ -27,6 +27,18 @@ expMap = {"gf": "GF MAP", "lp": "LP MAP",
 
 
 def learn_emb(MethObj, graphs, params, res_pre, m_summ):
+    """Function to learn embedding
+           
+           Attributes:
+               MethObj (obj): Object of the algorithm class 
+               graphs (Object): Networkx Graph Object
+               params (dict): Dictionary of parameters necessary for running the experiment
+               res_pre (str): Prefix of the filename for saving the result.
+               m_summ (str): summary added to the filename of the result.
+
+            Returns:
+                ndarray: Learned embedding
+    """
     if params["experiments"] == ["lp"]:
         X = None
     else:
@@ -57,6 +69,19 @@ def learn_emb(MethObj, graphs, params, res_pre, m_summ):
 
 
 def run_exps(MethObj, meth, dim, graphs, data_set, params):
+    """Function to run the experiment
+           
+           Attributes:
+               MethObj (obj): Object of the algorithm class 
+               meth (str): Name of the method
+               dim (int): Dimension of the embedding
+               graphs (Object): Networkx Graph Object
+               data_set (str): Name of the dataset to be used for the experiment
+               params (dict): Dictionary of parameters necessary for running the experiment
+                
+            Returns:
+                ndarray: Learned embedding
+    """
     m_summ = '%s_%d' % (meth, dim)
     res_pre = "results/%s" % data_set
     n_r = params["rounds"]
@@ -87,6 +112,7 @@ def run_exps(MethObj, meth, dim, graphs, data_set, params):
 
 
 def get_max(val, val_max, idx, idx_max):
+    """Function to get the maximum value."""
     if val > val_max:
         return val, idx
     else:
@@ -94,6 +120,14 @@ def get_max(val, val_max, idx, idx_max):
 
 
 def choose_best_hyp(data_set, graphs, params):
+    """Function to get the best hyperparameter using a grid search
+           
+           Attributes:
+               data_set (str): Name of the dataset to be used for the experiment
+               graphs (Object): Networkx Graph Object
+               params (dict): Dictionary of parameters necessary for running the experiment
+
+    """
     # Load range of hyper parameters to test on
     try:
         model_hyp_range = json.load(
@@ -180,6 +214,13 @@ def choose_best_hyp(data_set, graphs, params):
 
 
 def call_plot_hyp(data_set, params):
+    """Function to plot the result of hyperparameter search
+           
+           Attributes:
+               data_set (str): Name of the dataset to be used for the experiment
+               params (dict): Dictionary of parameters necessary for running the experiment
+
+    """
     # Load range of hyper parameters tested on to plot
     try:
         model_hyp_range = json.load(
@@ -198,6 +239,13 @@ def call_plot_hyp(data_set, params):
 
 
 def call_plot_hyp_all(data_sets, params):
+    """Function to plot the the result of all the hyper-parameters
+           
+           Attributes:
+               data_set (str): Name of the dataset to be used for the experiment
+               params (dict): Dictionary of parameters necessary for running the experiment
+
+    """
     # Load range of hyper parameters tested on to plot
     try:
         model_hyp_range = json.load(
@@ -216,7 +264,14 @@ def call_plot_hyp_all(data_sets, params):
 
 
 def call_exps(params, data_set, n_graphs):
+    """Function to run the experiments
+           
+           Attributes:
+               n_graphs (int): Total number of graphs in a sequence.
+               data_set (str): Name of the dataset to be used for the experiment
+               params (dict): Dictionary of parameters necessary for running the experiment
 
+    """
     # Load Dataset
     print('Dataset: %s' % data_set)
     if data_set == "sbm":

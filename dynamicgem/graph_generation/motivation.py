@@ -4,10 +4,9 @@ import random
 import networkx as nx
 import operator
 import sys
-sys.path.append('./')
-# from graph_generation import SBM_graph
-from utils import graph_util
-from .SBM_graph import SBM_graph
+
+from dynamicgem.utils import graph_util
+from dynamicgem.graph_generation.SBM_graph import SBM_graph
 
 from matplotlib import rc
 import random

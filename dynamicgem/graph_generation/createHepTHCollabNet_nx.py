@@ -4,9 +4,6 @@ import re
 import pdb
 import pickle
 
-import sys
-sys.path.append('./')
-
 DATA_DIR = 'data/real/hep-th/abs'
 folder_names = os.listdir(DATA_DIR)
 

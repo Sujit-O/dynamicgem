@@ -4,7 +4,7 @@ import numpy as np
 import random
 import networkx as nx
 import operator
-import SBM_graph
+import dynamicgem.graph_generation.SBM_graph
 
 function_mapping = {'degree': nx.degree_centrality,
                     'eigenvector': nx.eigenvector_centrality,

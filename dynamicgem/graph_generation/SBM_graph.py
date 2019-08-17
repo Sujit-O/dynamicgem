@@ -3,8 +3,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import networkx as nx
 import operator
-import sys
-sys.path.append('./')
 from dynamicgem.utils import graph_util
 import random
 
