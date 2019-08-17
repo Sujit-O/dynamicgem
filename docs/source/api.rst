@@ -96,11 +96,12 @@ Metrics
 .. automodule:: dynamicgem.evaluation.metrics
    :members:
 
-Standard Test
-----------------
+Embedding Visualization
+------------------------
 
-.. automodule:: dynamicgem.evaluation.standardTest
+.. automodule:: dynamicgem.evaluation.visualize_embedding
    :members:
+
 
 Experiments
 ============
