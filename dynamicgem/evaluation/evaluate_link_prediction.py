@@ -21,6 +21,18 @@ def evaluateDynamicLinkPrediction(graph,
                                   no_python=False,
                                   is_undirected=True,
                                   sampling_scheme="u_rand"):
+    """Function to evaluate Dynamic Link Prediction
+           
+           Attributes:
+               graph (Object): Networkx Graph Object
+               embedding (object): Algorithm for learning graph embedding
+               n_sample_nodes (list): sampled nodes
+               is_undirected (bool): Flag to denote if the graph is directed.
+               sampling_scheme (str): Sampling scheme to be used. 
+
+            Returns:
+                ndarray: MAP, precision curve
+    """
     node_l = None
     if n_sample_nodes:
         if sampling_scheme == "u_rand":
@@ -60,6 +72,19 @@ def evaluateDynamicLinkPrediction_TIMERS(graph,
                                          no_python=False,
                                          is_undirected=True,
                                          sampling_scheme="u_rand"):
+    """Function to evaluate Dynamic Link Prediction for TIMERS
+           
+           Attributes:
+               graph (Object): Networkx Graph Object
+               embedding (object): Algorithm for learning graph embedding
+               t(int): sequence of the graph
+               n_sample_nodes (list): sampled nodes
+               is_undirected (bool): Flag to denote if the graph is directed.
+               sampling_scheme (str): Sampling scheme to be used. 
+
+            Returns:
+                ndarray: MAP, precision curve
+    """
     node_l = None
     if n_sample_nodes:
         if sampling_scheme == "u_rand":
@@ -98,6 +123,24 @@ def expLP(graphs,
           no_python=False,
           is_undirected=True,
           sampling_scheme="u_rand"):
+    """Function to evaluate link prediction
+           
+           Attributes:
+               digraph (Object): Networkx Graph Object
+               graph_embedding (object): Algorithm for learning graph embedding
+               X_stat (ndarray): Embedding values of the graph.
+               n_sampled_nodes (int): List of sampled nodes.
+               train_ratio_init (float): sample to be used for training and testing.
+               rounds (int): Number of times to run the experiment
+               res_pre (str): prefix to be used to store the result. 
+               m_summ (str): summary to be used to save the result.
+               file_suffix (str): Suffix for file name.
+               is_undirected (bool): Flag to denote if the graph is directed.
+               sampling_scheme(str): sampling scheme for selecting the nodes.
+
+            Returns:
+                ndarray: Mean Average precision
+    """
     n_sample_nodes = int(n_sample_nodes)
     print('\tDynamic Link Prediction')
     summ_file = open('%s%s.dlpsumm' % (res_pre, m_summ), 'w')
@@ -147,6 +190,24 @@ def exp_changedLP(graphs,
                   no_python=False,
                   is_undirected=True,
                   sampling_scheme="u_rand"):
+    """Function to evaluate only changed link prediction
+           
+           Attributes:
+               digraph (Object): Networkx Graph Object
+               graph_embedding (object): Algorithm for learning graph embedding
+               X_stat (ndarray): Embedding values of the graph.
+               n_sampled_nodes (int): List of sampled nodes.
+               train_ratio_init (float): sample to be used for training and testing.
+               rounds (int): Number of times to run the experiment
+               res_pre (str): prefix to be used to store the result. 
+               m_summ (str): summary to be used to save the result.
+               file_suffix (str): Suffix for file name.
+               is_undirected (bool): Flag to denote if the graph is directed.
+               sampling_scheme(str): sampling scheme for selecting the nodes.
+
+            Returns:
+                ndarray: Mean Average precision
+    """
     n_sample_nodes = int(n_sample_nodes)
     print('\tDynamic Link Prediction')
     summ_file = open('%s%s.dlpsumm' % (res_pre, m_summ), 'w')
@@ -197,6 +258,23 @@ def evaluateDynamic_changed_LinkPrediction(graph,
                                            no_python=False,
                                            is_undirected=True,
                                            sampling_scheme="u_rand"):
+    """Function to evaluate dynamic changed link prediction
+           
+           Attributes:
+               graph (Object): Networkx Graph Object
+               embedding (object): Algorithm for learning graph embedding.
+               edges_add (list): list of edges to be added.
+               edges_rm (list): list of edges to be removed.
+               n_sampled_nodes (int): List of sampled nodes.
+               train_ratio_init (float): sample to be used for training and testing.
+               rounds (int): Number of times to run the experiment
+               m_summ (str): summary to be used to save the result.
+               is_undirected (bool): Flag to denote if the graph is directed.
+               sampling_scheme(str): sampling scheme for selecting the nodes.
+
+            Returns:
+                ndarray: Mean Average precision
+    """
     nodes = []
     for e in edges_add[0]:
         nodes.append(e[0])
@@ -235,6 +313,23 @@ def evaluateDynamic_changed_LinkPrediction_v2(graph,
                                               no_python=False,
                                               is_undirected=True,
                                               sampling_scheme="u_rand"):
+    """Function to evaluate dynamic changed link prediction
+           
+           Attributes:
+               graph (Object): Networkx Graph Object
+               embedding (object): Algorithm for learning graph embedding.
+               edges_add (list): list of edges to be added.
+               edges_rm (list): list of edges to be removed.
+               n_sampled_nodes (int): List of sampled nodes.
+               train_ratio_init (float): sample to be used for training and testing.
+               rounds (int): Number of times to run the experiment
+               m_summ (str): summary to be used to save the result.
+               is_undirected (bool): Flag to denote if the graph is directed.
+               sampling_scheme(str): sampling scheme for selecting the nodes.
+
+            Returns:
+                ndarray: Mean Average precision
+    """
     nodes = []
     for e in edges_add[0]:
         nodes.append(e[0])
@@ -276,6 +371,7 @@ def evaluateDynamic_changed_LinkPrediction_v2(graph,
 
 
 def getchangedlinks(G, Gnew):
+    """Functionto get all the changed links"""
     # get all the changed links
     edges_add = []
     Gdiff = nx.difference(Gnew, G)
@@ -305,6 +401,24 @@ def expstatic_changedLP(dynamic_sbm_series,
                         no_python=False,
                         is_undirected=True,
                         sampling_scheme="u_rand"):
+    """Function to evaluate statically changed link prediction
+           
+           Attributes:
+               dynamic_sbm_series (list): list of Networkx Graph Object
+               gaphs (object): Networkx graphs
+               embedding (object): Algorithm for learning graph embedding
+               n_sampled_nodes (int): List of sampled nodes.
+               train_ratio_init (float): sample to be used for training and testing.
+               rounds (int): Number of times to run the experiment
+               res_pre (str): prefix to be used to store the result. 
+               m_summ (str): summary to be used to save the result.
+               file_suffix (str): Suffix for file name.
+               is_undirected (bool): Flag to denote if the graph is directed.
+               sampling_scheme(str): sampling scheme for selecting the nodes.
+
+            Returns:
+                ndarray: Mean Average precision
+    """
     n_sample_nodes = int(n_sample_nodes)
     print('\tDynamic Link Prediction')
     summ_file = open('%s%s.dlpsumm' % (res_pre, m_summ), 'w')
@@ -358,6 +472,24 @@ def expstaticLP(dynamic_sbm_series,
                 no_python=False,
                 is_undirected=True,
                 sampling_scheme="u_rand"):
+    """Function to evaluate statically changed link prediction
+           
+           Attributes:
+               dynamic_sbm_series (list): list of Networkx Graph Object
+               gaphs (object): Networkx graphs
+               embedding (object): Algorithm for learning graph embedding
+               n_sampled_nodes (int): List of sampled nodes.
+               train_ratio_init (float): sample to be used for training and testing.
+               rounds (int): Number of times to run the experiment
+               res_pre (str): prefix to be used to store the result. 
+               m_summ (str): summary to be used to save the result.
+               file_suffix (str): Suffix for file name.
+               is_undirected (bool): Flag to denote if the graph is directed.
+               sampling_scheme(str): sampling scheme for selecting the nodes.
+
+            Returns:
+                ndarray: Mean Average precision
+    """
     n_sample_nodes = int(n_sample_nodes)
     print('\tDynamic Link Prediction')
     summ_file = open('%s%s.dlpsumm' % (res_pre, m_summ), 'w')
@@ -409,6 +541,24 @@ def expstaticLP_TIMERS(dynamic_sbm_series,
                        no_python=False,
                        is_undirected=True,
                        sampling_scheme="u_rand"):
+    """Function to evaluate statically changed link prediction for TIMERS
+           
+           Attributes:
+               dynamic_sbm_series (list): list of Networkx Graph Object
+               gaphs (object): Networkx graphs
+               embedding (object): Algorithm for learning graph embedding
+               n_sampled_nodes (int): List of sampled nodes.
+               train_ratio_init (float): sample to be used for training and testing.
+               rounds (int): Number of times to run the experiment
+               res_pre (str): prefix to be used to store the result. 
+               m_summ (str): summary to be used to save the result.
+               file_suffix (str): Suffix for file name.
+               is_undirected (bool): Flag to denote if the graph is directed.
+               sampling_scheme(str): sampling scheme for selecting the nodes.
+
+            Returns:
+                ndarray: Mean Average precision
+    """
     n_sample_nodes = int(n_sample_nodes)
     print('\tDynamic Link Prediction')
     summ_file = open('%s%s.dlpsumm' % (res_pre, m_summ), 'w')
@@ -460,6 +610,25 @@ def expstaticLP_TRIAD(dynamic_sbm_series,
                       no_python=False,
                       is_undirected=True,
                       sampling_scheme="u_rand"):
+    
+    """Function to evaluate statically changed link prediction for dynamic Triad
+           
+           Attributes:
+               dynamic_sbm_series (list): list of Networkx Graph Object
+               gaphs (object): Networkx graphs
+               embedding (object): Algorithm for learning graph embedding
+               n_sampled_nodes (int): List of sampled nodes.
+               train_ratio_init (float): sample to be used for training and testing.
+               rounds (int): Number of times to run the experiment
+               res_pre (str): prefix to be used to store the result. 
+               m_summ (str): summary to be used to save the result.
+               file_suffix (str): Suffix for file name.
+               is_undirected (bool): Flag to denote if the graph is directed.
+               sampling_scheme(str): sampling scheme for selecting the nodes.
+
+            Returns:
+                ndarray: Mean Average precision
+    """
     n_sample_nodes = int(n_sample_nodes)
     print('\tDynamic Link Prediction')
     summ_file = open('%s%s.dlpsumm' % (res_pre, m_summ), 'w')

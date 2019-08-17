@@ -56,6 +56,25 @@ TIMERS
 .. automodule:: dynamicgem.embedding.TIMERS
    :members: TIMERS
 
+incremental SVD
+----------------
+
+.. automodule:: dynamicgem.embedding.incrementalSVD
+   :members: incSVD
+
+rerunSVD
+---------
+
+.. automodule:: dynamicgem.embedding.rerunSVD
+   :members: rerunSVD
+
+optimalSVD
+------------
+
+.. automodule:: dynamicgem.embedding.optimalSVD
+   :members: optimalSVD
+   
+
 Evaluation Functions
 =====================
 
@@ -63,7 +82,7 @@ Graph Reconstruction
 ----------------------
 
 .. automodule:: dynamicgem.evaluation.evaluate_graph_reconstruction
-   :members:
+   :members: evaluateStaticGraphReconstruction, expGR
 
 Link Prediction
 ----------------
