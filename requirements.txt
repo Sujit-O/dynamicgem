@@ -9,7 +9,7 @@ numpydoc>=0.9.1
 sphinx-gallery>=0.3.1
 sphinx-rtd-theme>=0.4.3
 pytest>=3.6
-tensorflow==1.14.0
+tensorflow==2.5.3
 h5py>=2.8.0
 joblib>=0.12.5
 Keras>=2.2.4
